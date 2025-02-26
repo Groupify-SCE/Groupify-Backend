@@ -5,6 +5,8 @@ import authRouter from './routes/auth';
 const app = express();
 const port = 3001;
 
+app.use(express.json());
+
 app.get('/', (req: Request, res: Response) => {
   res.status(StatusCodes.OK).send('hello');
 });
