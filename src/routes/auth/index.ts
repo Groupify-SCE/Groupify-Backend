@@ -1,12 +1,16 @@
 import express, { Router, Request, Response } from 'express';
-import { StatusCodes } from 'http-status-codes';
+import { validateData } from '../../utils/middleware/validation.middleware';
+import { userRegisterSchema } from './types';
+import asyncHandler from '../../utils/errorHandling/asyncHandler';
 
 const router: Router = express.Router();
 
-router.post('/register', (req: Request, res: Response) => {
-  res
-    .status(StatusCodes.CREATED)
-    .json({ response: 'User registered successfully' });
-});
+router.post(
+  '/register',
+  validateData(userRegisterSchema),
+  asyncHandler(async (req: Request, res: Response) => {
+    res.status(201).send({ response: 'User registered successfully' });
+  })
+);
 
 export default router;
