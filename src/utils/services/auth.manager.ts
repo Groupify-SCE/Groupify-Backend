@@ -91,7 +91,7 @@ class AuthManager {
       const token = jwtService.generateToken({
         type: 'auth',
         userId: user._id.toString(),
-      })
+      }, '7d')
       if (!token) {
         return {
           status: StatusCodes.INTERNAL_SERVER_ERROR,
