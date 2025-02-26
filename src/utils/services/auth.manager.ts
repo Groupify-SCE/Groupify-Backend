@@ -3,6 +3,7 @@ import { UserLoginSchema, UserRegisterSchema } from '../../routes/auth/types';
 import { DatabaseManager } from './database.manager';
 import bcrypt from 'bcrypt';
 import jwtService, { JWTService } from './jwt.service';
+import { ObjectId } from 'mongodb';
 
 class AuthManager {
   private static instance: AuthManager;
@@ -111,9 +112,21 @@ class AuthManager {
     };
   }
 
-  public async getUserStatus(token: string): Promise<{ status: number; response: string }> {
+  public async getUserStatus(user_id: string): Promise<{ status: number; response: string }> {
     try {
-
+      const user = await this.userDatabaseManager.findOne({
+        _id: new ObjectId(user_id),
+      });
+      if (!user) {
+        return {
+          status: StatusCodes.UNAUTHORIZED,
+          response: 'Invalid token',
+        };
+      }
+      return {
+        status: StatusCodes.OK,
+        response: 'User is authenticated',
+      };
     } catch (error) {
       console.error('Error in getUserStatus: ' + error);
     }

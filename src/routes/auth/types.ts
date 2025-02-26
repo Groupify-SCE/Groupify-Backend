@@ -39,8 +39,8 @@ export const userLoginSchema = z.object({
 
 export type UserLoginSchema = z.infer<typeof userLoginSchema>;
 
-export const userStatusSchema = z.object({
+export const userAuthTokenSchema = z.object({
   Authorization: z.string().min(1),
 });
 
-export type UserStatusSchema = z.infer<typeof userStatusSchema>;
+export type UserAuthTokenSchema = z.infer<typeof userAuthTokenSchema>;
