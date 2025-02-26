@@ -28,3 +28,14 @@ export const userRegisterSchema = z.object({
 });
 
 export type UserRegisterSchema = z.infer<typeof userRegisterSchema>;
+
+export const userLoginSchema = z.object({
+  identifier: z.union([
+    z.string().email(),
+    z.string().min(1),
+  ]),
+  password: z.string().min(1),
+});
+
+export type UserLoginSchema = z.infer<typeof userLoginSchema>;
+
