@@ -1,5 +1,5 @@
 import { StatusCodes } from 'http-status-codes';
-import { UserRegisterSchema } from '../../routes/auth/types';
+import { UserLoginSchema, UserRegisterSchema } from '../../routes/auth/types';
 import { DatabaseManager } from './database.manager';
 import bcrypt from 'bcrypt';
 
@@ -66,6 +66,20 @@ class AuthManager {
       response: 'Failed to register user',
     };
   }
+
+  public async loginUser(
+    loginData: UserLoginSchema
+  ): Promise<{ status: number; response: string }> {
+    try {
+    } catch (error) {
+      console.error('Error in loginUser: ' + error);
+    }
+    return {
+      status: StatusCodes.INTERNAL_SERVER_ERROR,
+      response: 'Failed to login user',
+    };
+  }
+
 }
 
 const authManager = AuthManager.getInstance();
