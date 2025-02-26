@@ -111,6 +111,17 @@ class AuthManager {
     };
   }
 
+  public async getUserStatus(token: string): Promise<{ status: number; response: string }> {
+    try {
+
+    } catch (error) {
+      console.error('Error in getUserStatus: ' + error);
+    }
+    return {
+      status: StatusCodes.INTERNAL_SERVER_ERROR,
+      response: 'Failed to get user status',
+    };
+  }
 }
 
 const authManager = AuthManager.getInstance();

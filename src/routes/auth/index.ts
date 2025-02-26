@@ -1,6 +1,6 @@
 import express, { Router, Request, Response } from 'express';
 import { validateData } from '../../utils/middleware/validation.middleware';
-import { UserLoginSchema, userLoginSchema, UserRegisterSchema, userRegisterSchema } from './types';
+import { UserLoginSchema, userLoginSchema, UserRegisterSchema, userRegisterSchema, userStatusSchema } from './types';
 import authManager from '../../utils/services/auth.manager';
 import { StatusCodes } from 'http-status-codes';
 
@@ -35,6 +35,16 @@ router.post('/login',
     res.status(status).send({ response: 'Logged in successfully' });
     return;
   }
+
+  res.status(status).send({ response });
+});
+
+router.get('/status',
+  validateData(userStatusSchema, 'cookies'),
+  async (req: Request, res: Response) => {
+  const token = req.cookies.Authorization;
+
+  const { status, response } = await authManager.getUserStatus(token);
 
   res.status(status).send({ response });
 });
