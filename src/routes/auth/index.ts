@@ -3,6 +3,7 @@ import { validateData } from '../../utils/middleware/validation.middleware';
 import { UserLoginSchema, userLoginSchema, UserRegisterSchema, userRegisterSchema } from './types';
 import authManager from '../../utils/services/auth.manager';
 import { StatusCodes } from 'http-status-codes';
+import { validateAndExtractAuthToken } from '../../utils/middleware/authToken.middleware';
 
 const router: Router = express.Router();
 
@@ -26,15 +27,26 @@ router.post('/login',
   const { status, response } = await authManager.loginUser(loginData);
 
   if (status === StatusCodes.OK) {
-    res.cookie('Authorization', 'Bearer ' + response, {
-      httpOnly: true,
-      secure: true,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    res.setHeader('Authorization', 'Bearer ' + response);
     
     res.status(status).send({ response: 'Logged in successfully' });
     return;
   }
+
+  res.status(status).send({ response });
+});
+
+router.get('/status',
+  validateAndExtractAuthToken(),
+  async (req: Request, res: Response) => {
+  const userId = req.userId;
+  
+  if (!userId) {
+    res.status(StatusCodes.UNAUTHORIZED).send({ response: 'Unauthorized' });
+    return;
+  }
+
+  const { status, response } = await authManager.getUserStatus(userId);
 
   res.status(status).send({ response });
 });
