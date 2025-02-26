@@ -1,6 +1,7 @@
 import { StatusCodes } from 'http-status-codes';
 import { UserRegisterSchema } from '../../routes/auth/types';
 import { DatabaseManager } from './database.manager';
+import bcrypt from 'bcrypt';
 
 class AuthManager {
   private static instance: AuthManager;
@@ -25,11 +26,38 @@ class AuthManager {
           response: 'Passwords do not match',
         };
       }
-
-      return {
-        status: StatusCodes.CREATED,
-        response: 'User registered successfully',
-      };
+      const userExistsByEmail = await this.userDatabaseManager.findOne({
+        email: userData.email,
+      });
+      if (userExistsByEmail) {
+        return {
+          status: StatusCodes.BAD_REQUEST,
+          response: 'User already exists with the given email',
+        };
+      }
+      const userExistsByUsername = await this.userDatabaseManager.findOne({
+        username: userData.username,
+      });
+      if (userExistsByUsername) {
+        return {
+          status: StatusCodes.BAD_REQUEST,
+          response: 'User already exists with the given username',
+        };
+      }
+      const hashedPassword = await bcrypt.hash(userData.password, 10);
+      const createUserResult = await this.userDatabaseManager.create({
+        username: userData.username,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        password: hashedPassword,
+      });
+      if (createUserResult.acknowledged) {
+        return {
+          status: StatusCodes.CREATED,
+          response: 'User registered successfully',
+        };
+      }
     } catch (error) {
       console.error('Error in registerUser: ' + error);
     }

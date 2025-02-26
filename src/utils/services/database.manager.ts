@@ -28,34 +28,32 @@ export class DatabaseManager {
     this.collection = DatabaseManager.db.collection(collectionName);
   }
 
-  protected async create(
+  public async create(
     doc: Record<string, unknown>
   ): Promise<InsertOneResult<Document>> {
     return await this.collection.insertOne(doc);
   }
 
-  protected async find(
+  public async find(
     filter: Record<string, unknown> = {}
   ): Promise<WithId<Document>[]> {
     return this.collection.find(filter).toArray();
   }
 
-  protected async findOne(
+  public async findOne(
     filter: Record<string, unknown>
   ): Promise<WithId<Document> | null> {
     return this.collection.findOne(filter);
   }
 
-  protected async update(
+  public async update(
     filter: Record<string, unknown>,
     update: Record<string, unknown>
   ): Promise<UpdateResult<Document>> {
     return await this.collection.updateMany(filter, update);
   }
 
-  protected async delete(
-    filter: Record<string, unknown>
-  ): Promise<DeleteResult> {
+  public async delete(filter: Record<string, unknown>): Promise<DeleteResult> {
     return await this.collection.deleteMany(filter);
   }
 
@@ -67,7 +65,7 @@ export class DatabaseManager {
     return await this.collection.updateMany(filter, updateQuery);
   }
 
-  protected async fieldExists(
+  public async fieldExists(
     filter: Record<string, unknown>,
     field: string
   ): Promise<boolean> {
