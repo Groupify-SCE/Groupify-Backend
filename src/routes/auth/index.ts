@@ -1,7 +1,8 @@
 import express, { Router, Request, Response } from 'express';
 import { validateData } from '../../utils/middleware/validation.middleware';
-import { userLoginSchema, UserRegisterSchema, userRegisterSchema } from './types';
+import { UserLoginSchema, userLoginSchema, UserRegisterSchema, userRegisterSchema } from './types';
 import authManager from '../../utils/services/auth.manager';
+import { StatusCodes } from 'http-status-codes';
 
 const router: Router = express.Router();
 
@@ -23,6 +24,17 @@ router.post('/login',
   const loginData: UserLoginSchema = req.body;
 
   const { status, response } = await authManager.loginUser(loginData);
+
+  if (status === StatusCodes.OK) {
+    res.cookie('Authorization', 'Bearer ' + response, {
+      httpOnly: true,
+      secure: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+    
+    res.status(status).send({ response: 'Logged in successfully' });
+    return;
+  }
 
   res.status(status).send({ response });
 });
