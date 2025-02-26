@@ -1,8 +1,10 @@
 import { StatusCodes } from 'http-status-codes';
 import { UserRegisterSchema } from '../../routes/auth/types';
+import { DatabaseManager } from './database.manager';
 
 class AuthManager {
   private static instance: AuthManager;
+  private userDatabaseManager = new DatabaseManager('Users');
 
   private constructor() {}
 
@@ -17,11 +19,24 @@ class AuthManager {
     userData: UserRegisterSchema
   ): Promise<{ status: number; response: string }> {
     try {
-      return { status: StatusCodes.CREATED, response: 'User registered successfully' };
+      if (userData.password !== userData.passwordConfirmation) {
+        return {
+          status: StatusCodes.BAD_REQUEST,
+          response: 'Passwords do not match',
+        };
+      }
+
+      return {
+        status: StatusCodes.CREATED,
+        response: 'User registered successfully',
+      };
     } catch (error) {
       console.error('Error in registerUser: ' + error);
     }
-    return { status: StatusCodes.INTERNAL_SERVER_ERROR, response: 'Failed to register user' };
+    return {
+      status: StatusCodes.INTERNAL_SERVER_ERROR,
+      response: 'Failed to register user',
+    };
   }
 }
 

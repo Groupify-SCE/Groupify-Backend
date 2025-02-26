@@ -1,3 +1,5 @@
+import dotenv from 'dotenv';
+dotenv.config();
 import express, { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import authRouter from './routes/auth';
