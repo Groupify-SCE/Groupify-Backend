@@ -1,6 +1,10 @@
 import express, { Router, Request, Response } from 'express';
 import { validateData } from '../../utils/middleware/validation.middleware';
 import {
+  ResetPasswordRequestSchema,
+  resetPasswordRequestSchema,
+  ResetPasswordSchema,
+  resetPasswordSchema,
   UserLoginSchema,
   userLoginSchema,
   UserRegisterSchema,
@@ -57,6 +61,22 @@ router.get(
     const { status, response } = await authManager.getUserStatus(userId);
 
     res.status(status).send({ response });
+  }
+);
+
+router.post(
+  '/request-reset-password',
+  validateData(resetPasswordRequestSchema),
+  async (req: Request, res: Response) => {
+    const resetPasswordData: ResetPasswordRequestSchema = req.body;
+  }
+);
+
+router.post(
+  '/reset-password',
+  validateData(resetPasswordSchema),
+  async (req: Request, res: Response) => {
+    const resetPasswordData: ResetPasswordSchema = req.body;
   }
 );
 
