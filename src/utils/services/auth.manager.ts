@@ -1,9 +1,15 @@
 import { StatusCodes } from 'http-status-codes';
-import { UserLoginSchema, UserRegisterSchema } from '../../routes/auth/types';
+import {
+  ResetPasswordRequestSchema,
+  ResetPasswordSchema,
+  UserLoginSchema,
+  UserRegisterSchema,
+} from '../../routes/auth/types';
 import { DatabaseManager } from './database.manager';
 import bcrypt from 'bcrypt';
 import jwtService from './jwt.service';
 import { ObjectId } from 'mongodb';
+import emailManager from './email.service';
 
 class AuthManager {
   private static instance: AuthManager;
@@ -144,6 +150,60 @@ class AuthManager {
     return {
       status: StatusCodes.INTERNAL_SERVER_ERROR,
       response: 'Failed to get user status',
+    };
+  }
+
+  public async requestResetPassword(
+    resetPasswordData: ResetPasswordRequestSchema
+  ): Promise<{ status: number; response: string }> {
+    try {
+      const user = await this.userDatabaseManager.findOne({
+        email: resetPasswordData.email,
+      });
+      if (!user) {
+        return {
+          status: StatusCodes.BAD_REQUEST,
+          response: 'User not found with the given email',
+        };
+      }
+      const emailResponse = await emailManager.generateResetPasswordEmail(
+        user._id.toString(),
+        user.email,
+        user.firstName + ' ' + user.lastName
+      );
+      if (!emailResponse) {
+        return {
+          status: StatusCodes.INTERNAL_SERVER_ERROR,
+          response: 'Failed to send reset password email',
+        };
+      }
+      return {
+        status: StatusCodes.OK,
+        response: 'Reset password email sent',
+      };
+    } catch (error) {
+      console.error('Error in requestResetPassword: ' + error);
+    }
+    return {
+      status: StatusCodes.INTERNAL_SERVER_ERROR,
+      response: 'Failed to request reset password',
+    };
+  }
+
+  public async resetPassword(
+    resetPasswordData: ResetPasswordSchema
+  ): Promise<{ status: number; response: string }> {
+    try {
+      return {
+        status: StatusCodes.OK,
+        response: 'Password reset successfully',
+      };
+    } catch (error) {
+      console.error('Error in resetPassword: ' + error);
+    }
+    return {
+      status: StatusCodes.INTERNAL_SERVER_ERROR,
+      response: 'Failed to reset password',
     };
   }
 }

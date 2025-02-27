@@ -69,6 +69,11 @@ router.post(
   validateData(resetPasswordRequestSchema),
   async (req: Request, res: Response) => {
     const resetPasswordData: ResetPasswordRequestSchema = req.body;
+
+    const { status, response } =
+      await authManager.requestResetPassword(resetPasswordData);
+
+    res.status(status).send({ response });
   }
 );
 
@@ -77,6 +82,11 @@ router.post(
   validateData(resetPasswordSchema),
   async (req: Request, res: Response) => {
     const resetPasswordData: ResetPasswordSchema = req.body;
+
+    const { status, response } =
+      await authManager.resetPassword(resetPasswordData);
+
+    res.status(status).send({ response });
   }
 );
 

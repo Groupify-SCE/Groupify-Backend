@@ -74,10 +74,7 @@ class EmailManager {
     try {
       const token = this.generateToken(user_id);
 
-      const templatePath = path.join(
-        __dirname,
-        '../emails/resetPassword.ejs'
-      );
+      const templatePath = path.join(__dirname, '../emails/resetPassword.ejs');
 
       const templateContent = fs.readFileSync(templatePath, 'utf8');
       const htmlContent = ejs.render(templateContent, { token, name });

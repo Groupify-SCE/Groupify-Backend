@@ -46,14 +46,19 @@ export const resetPasswordRequestSchema = z.object({
   email: z.string().email(),
 });
 
-export type ResetPasswordRequestSchema = z.infer<typeof resetPasswordRequestSchema>;
+export type ResetPasswordRequestSchema = z.infer<
+  typeof resetPasswordRequestSchema
+>;
 
 export const resetPasswordSchema = z.object({
   token: z.string().min(1),
-  password: z.string().min(8).regex(
-    /^(?=.*\d)(?=.*[!@#$%^&*])/,
-    'Password must contain at least one digit and one special character'
-  ),
+  password: z
+    .string()
+    .min(8)
+    .regex(
+      /^(?=.*\d)(?=.*[!@#$%^&*])/,
+      'Password must contain at least one digit and one special character'
+    ),
   passwordConfirmation: z.string(),
 });
 
