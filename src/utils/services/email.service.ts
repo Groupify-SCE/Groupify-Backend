@@ -76,7 +76,7 @@ class EmailManager {
 
       const templatePath = path.join(
         __dirname,
-        '../email_templates/resetPassword.ejs'
+        '../emails/resetPassword.ejs'
       );
 
       const templateContent = fs.readFileSync(templatePath, 'utf8');
