@@ -42,7 +42,7 @@ class EmailManager {
       const mailOptions = {
         from: process.env.GMAIL_USER,
         to: participants,
-        subject: '[FantasyBG] ' + subject,
+        subject: '[Groupify] ' + subject,
         html: content,
       };
       await this.transporter.sendMail(mailOptions);

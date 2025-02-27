@@ -194,6 +194,45 @@ class AuthManager {
     resetPasswordData: ResetPasswordSchema
   ): Promise<{ status: number; response: string }> {
     try {
+      if (resetPasswordData.password !== resetPasswordData.passwordConfirmation) {
+        return {
+          status: StatusCodes.BAD_REQUEST,
+          response: 'Passwords do not match',
+        };
+      }
+      const payload = jwtService.verifyToken(resetPasswordData.token);
+      if (!payload) {
+        return {
+          status: StatusCodes.BAD_REQUEST,
+          response: 'Invalid token',
+        };
+      }
+      if (!payload || payload.type !== 'reset_password' || typeof payload.user_id !== 'string') {
+        return {
+          status: StatusCodes.BAD_REQUEST,
+          response: 'Invalid token',
+        };
+      }
+      const user = await this.userDatabaseManager.findOne({
+        _id: new ObjectId(payload.user_id),
+      });
+      if (!user) {
+        return {
+          status: StatusCodes.BAD_REQUEST,
+          response: 'User not found',
+        };
+      }
+      const hashedPassword = await bcrypt.hash(resetPasswordData.password, 10);
+      const updateResult = await this.userDatabaseManager.update(
+        { _id: user._id },
+        { $set: { password: hashedPassword } }
+      );
+      if (!updateResult.acknowledged) {
+        return {
+          status: StatusCodes.INTERNAL_SERVER_ERROR,
+          response: 'Failed to reset password',
+        };
+      }
       return {
         status: StatusCodes.OK,
         response: 'Password reset successfully',
