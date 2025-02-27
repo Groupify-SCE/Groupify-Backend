@@ -2,7 +2,7 @@ import { StatusCodes } from 'http-status-codes';
 import { UserLoginSchema, UserRegisterSchema } from '../../routes/auth/types';
 import { DatabaseManager } from './database.manager';
 import bcrypt from 'bcrypt';
-import jwtService, { JWTService } from './jwt.service';
+import jwtService from './jwt.service';
 import { ObjectId } from 'mongodb';
 
 class AuthManager {
@@ -74,7 +74,10 @@ class AuthManager {
   ): Promise<{ status: number; response: string }> {
     try {
       const user = await this.userDatabaseManager.findOne({
-        $or: [{ email: loginData.identifier }, { username: loginData.identifier }],
+        $or: [
+          { email: loginData.identifier },
+          { username: loginData.identifier },
+        ],
       });
       if (!user) {
         return {
@@ -82,17 +85,23 @@ class AuthManager {
           response: 'Invalid credentials',
         };
       }
-      const isPasswordValid = await bcrypt.compare(loginData.password, user.password);
+      const isPasswordValid = await bcrypt.compare(
+        loginData.password,
+        user.password
+      );
       if (!isPasswordValid) {
         return {
           status: StatusCodes.BAD_REQUEST,
           response: 'Invalid credentials',
         };
       }
-      const token = jwtService.generateToken({
-        type: 'auth',
-        userId: user._id.toString(),
-      }, '7d')
+      const token = jwtService.generateToken(
+        {
+          type: 'auth',
+          userId: user._id.toString(),
+        },
+        '7d'
+      );
       if (!token) {
         return {
           status: StatusCodes.INTERNAL_SERVER_ERROR,
@@ -112,7 +121,9 @@ class AuthManager {
     };
   }
 
-  public async getUserStatus(user_id: string): Promise<{ status: number; response: string }> {
+  public async getUserStatus(
+    user_id: string
+  ): Promise<{ status: number; response: string }> {
     try {
       const user = await this.userDatabaseManager.findOne({
         _id: new ObjectId(user_id),

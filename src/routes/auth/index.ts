@@ -1,6 +1,11 @@
 import express, { Router, Request, Response } from 'express';
 import { validateData } from '../../utils/middleware/validation.middleware';
-import { UserLoginSchema, userLoginSchema, UserRegisterSchema, userRegisterSchema } from './types';
+import {
+  UserLoginSchema,
+  userLoginSchema,
+  UserRegisterSchema,
+  userRegisterSchema,
+} from './types';
 import authManager from '../../utils/services/auth.manager';
 import { StatusCodes } from 'http-status-codes';
 import { validateAndExtractAuthToken } from '../../utils/middleware/authToken.middleware';
@@ -19,36 +24,40 @@ router.post(
   }
 );
 
-router.post('/login',
+router.post(
+  '/login',
   validateData(userLoginSchema),
   async (req: Request, res: Response) => {
-  const loginData: UserLoginSchema = req.body;
+    const loginData: UserLoginSchema = req.body;
 
-  const { status, response } = await authManager.loginUser(loginData);
+    const { status, response } = await authManager.loginUser(loginData);
 
-  if (status === StatusCodes.OK) {
-    res.setHeader('Authorization', 'Bearer ' + response);
-    
-    res.status(status).send({ response: 'Logged in successfully' });
-    return;
+    if (status === StatusCodes.OK) {
+      res.setHeader('Authorization', 'Bearer ' + response);
+
+      res.status(status).send({ response: 'Logged in successfully' });
+      return;
+    }
+
+    res.status(status).send({ response });
   }
+);
 
-  res.status(status).send({ response });
-});
-
-router.get('/status',
+router.get(
+  '/status',
   validateAndExtractAuthToken(),
   async (req: Request, res: Response) => {
-  const userId = req.userId;
-  
-  if (!userId) {
-    res.status(StatusCodes.UNAUTHORIZED).send({ response: 'Unauthorized' });
-    return;
+    const userId = req.userId;
+
+    if (!userId) {
+      res.status(StatusCodes.UNAUTHORIZED).send({ response: 'Unauthorized' });
+      return;
+    }
+
+    const { status, response } = await authManager.getUserStatus(userId);
+
+    res.status(status).send({ response });
   }
-
-  const { status, response } = await authManager.getUserStatus(userId);
-
-  res.status(status).send({ response });
-});
+);
 
 export default router;
