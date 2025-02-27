@@ -9,10 +9,16 @@ import cookieParser from 'cookie-parser';
 const app = express();
 const port = 3001;
 
-const allowedOrigins = ['http://localhost:3000', 'https://groupify-frontend.onrender.com'];
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://groupify-frontend.onrender.com',
+];
 
 const corsOptions = {
-  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+  origin: (
+    origin: string | undefined,
+    callback: (err: Error | null, allow?: boolean) => void
+  ) => {
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {

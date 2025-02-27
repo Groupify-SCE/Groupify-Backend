@@ -30,10 +30,7 @@ export const userRegisterSchema = z.object({
 export type UserRegisterSchema = z.infer<typeof userRegisterSchema>;
 
 export const userLoginSchema = z.object({
-  identifier: z.union([
-    z.string().email(),
-    z.string().min(1),
-  ]),
+  identifier: z.union([z.string().email(), z.string().min(1)]),
   password: z.string().min(1),
 });
 
@@ -44,3 +41,25 @@ export const userAuthTokenSchema = z.object({
 });
 
 export type UserAuthTokenSchema = z.infer<typeof userAuthTokenSchema>;
+
+export const resetPasswordRequestSchema = z.object({
+  email: z.string().email(),
+});
+
+export type ResetPasswordRequestSchema = z.infer<
+  typeof resetPasswordRequestSchema
+>;
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1),
+  password: z
+    .string()
+    .min(8)
+    .regex(
+      /^(?=.*\d)(?=.*[!@#$%^&*])/,
+      'Password must contain at least one digit and one special character'
+    ),
+  passwordConfirmation: z.string(),
+});
+
+export type ResetPasswordSchema = z.infer<typeof resetPasswordSchema>;
