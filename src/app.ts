@@ -4,8 +4,8 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { StatusCodes } from 'http-status-codes';
 import authRouter from './routes/auth';
+import algorithmRouter from './routes/algorithm';
 import cookieParser from 'cookie-parser';
-
 const app = express();
 const port = 3001;
 
@@ -39,6 +39,7 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 app.use('/auth', authRouter);
+app.use('/algorithm', algorithmRouter);
 
 if (process.env.NODE_ENV !== 'test') {
   app.listen(port, () => {
