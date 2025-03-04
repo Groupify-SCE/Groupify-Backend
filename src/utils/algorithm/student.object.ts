@@ -1,10 +1,10 @@
-import { Criteria, StudentData } from "./types";
+import { Criteria, StudentData } from './types';
 
 class Student {
-    public readonly id: number;
-    public readonly name: string;
-    public readonly criteria: Criteria[];
-    public readonly preferences: number[];
+  public readonly id: number;
+  public readonly name: string;
+  public readonly criteria: Criteria[];
+  public readonly preferences: number[];
 
   constructor(student: StudentData) {
     this.id = student.id;
@@ -33,4 +33,3 @@ class Student {
 }
 
 export default Student;
-

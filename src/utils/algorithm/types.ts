@@ -4,8 +4,8 @@ export type Criteria = {
 };
 
 export type StudentData = {
-    id: number;
-    name: string;
-    preferences: number[];
-    criteria: Criteria[];
-}
+  id: number;
+  name: string;
+  preferences: number[];
+  criteria: Criteria[];
+};

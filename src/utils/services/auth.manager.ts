@@ -194,7 +194,9 @@ class AuthManager {
     resetPasswordData: ResetPasswordSchema
   ): Promise<{ status: number; response: string }> {
     try {
-      if (resetPasswordData.password !== resetPasswordData.passwordConfirmation) {
+      if (
+        resetPasswordData.password !== resetPasswordData.passwordConfirmation
+      ) {
         return {
           status: StatusCodes.BAD_REQUEST,
           response: 'Passwords do not match',
@@ -207,7 +209,11 @@ class AuthManager {
           response: 'Invalid token',
         };
       }
-      if (!payload || payload.type !== 'reset_password' || typeof payload.user_id !== 'string') {
+      if (
+        !payload ||
+        payload.type !== 'reset_password' ||
+        typeof payload.user_id !== 'string'
+      ) {
         return {
           status: StatusCodes.BAD_REQUEST,
           response: 'Invalid token',
