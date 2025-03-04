@@ -1,11 +1,21 @@
-import { StudentData } from "./types";
+import { Criteria, StudentData } from "./types";
 
-class StudentObject {
-  constructor(private readonly student: StudentData) {}
+class Student {
+    public readonly id: number;
+    public readonly name: string;
+    public readonly criteria: Criteria[];
+    public readonly preferences: number[];
+
+  constructor(student: StudentData) {
+    this.id = student.id;
+    this.name = student.name;
+    this.criteria = student.criteria;
+    this.preferences = student.preferences;
+  }
 
   public getScore(): number {
     let totalScore = 0;
-    for (const criteria of this.student.criteria) {
+    for (const criteria of this.criteria) {
       switch (criteria.type) {
         case '0-1':
           totalScore += criteria.value * 100;
@@ -20,15 +30,7 @@ class StudentObject {
     }
     return totalScore;
   }
-
-  public getId(): number {
-    return this.student.id;
-  }
-
-  public getName(): string {
-    return this.student.name;
-  }
 }
 
-export default StudentObject;
+export default Student;
 
