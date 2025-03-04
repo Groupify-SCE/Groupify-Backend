@@ -79,7 +79,7 @@ export class DatabaseManager {
   public async addField(
     search: Record<string, unknown>,
     field: string,
-    value: boolean
+    value: unknown
   ) {
     return await this.collection.updateMany(search, {
       $set: { [field]: value },
