@@ -53,7 +53,9 @@ export class DatabaseManager {
     return await this.collection.updateMany(filter, update);
   }
 
-  public async delete(filter: Record<string, unknown>): Promise<DeleteResult> {
+  public async delete(
+    filter: Record<string, unknown>
+  ): Promise<DeleteResult> {
     return await this.collection.deleteMany(filter);
   }
 
@@ -79,7 +81,7 @@ export class DatabaseManager {
   public async addField(
     search: Record<string, unknown>,
     field: string,
-    value: boolean
+    value: unknown
   ) {
     return await this.collection.updateMany(search, {
       $set: { [field]: value },
