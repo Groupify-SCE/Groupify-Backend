@@ -251,6 +251,37 @@ class AuthManager {
       response: 'Failed to reset password',
     };
   }
+
+  public async getUserInfo(
+    user_id: string
+  ): Promise<{ status: number; response: string | Record<string, string> }> {
+    try {
+      const user = await this.userDatabaseManager.findOne({
+        _id: new ObjectId(user_id),
+      });
+      if (!user) {
+        return {
+          status: StatusCodes.UNAUTHORIZED,
+          response: 'Invalid token',
+        };
+      }
+      return {
+        status: StatusCodes.OK,
+        response: {
+          username: user.username,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+        },
+      };
+    } catch (error) {
+      console.error('Error in getUserStatus: ' + error);
+    }
+    return {
+      status: StatusCodes.INTERNAL_SERVER_ERROR,
+      response: 'Failed to get user info',
+    };
+  }
 }
 
 const authManager = AuthManager.getInstance();
