@@ -300,16 +300,16 @@ class AuthManager {
           };
         }
       }
-
+  
       if (userData.password !== userData.passwordConfirmation) {
         return {
           status: StatusCodes.BAD_REQUEST,
           response: 'The password does not match the confirmation',
         };
       }
-
+  
       const updateData: Record<string, string> = {};
-
+  
       if (userData.firstName !== undefined) {
         updateData.firstName = userData.firstName;
       }
@@ -320,16 +320,18 @@ class AuthManager {
         updateData.email = userData.email;
       }
       if (userData.password !== undefined) {
-        updateData.password = userData.password;
+        // הצפנת הסיסמה עם bcrypt לפני העדכון
+        const hashedPassword = await bcrypt.hash(userData.password, 10);
+        updateData.password = hashedPassword;
       }
-
+  
       const result = await this.userDatabaseManager.update(
         { _id: new ObjectId(userId) },
         { $set: updateData }
       );
-
+  
       if (result.acknowledged) {
-        return { status: StatusCodes.OK, response: 'Updated sucessfully!' };
+        return { status: StatusCodes.OK, response: 'Updated successfully!' };
       } else {
         return {
           status: StatusCodes.INTERNAL_SERVER_ERROR,
@@ -344,7 +346,7 @@ class AuthManager {
       };
     }
   }
-}
+ } 
 
 const authManager = AuthManager.getInstance();
 export default authManager;
