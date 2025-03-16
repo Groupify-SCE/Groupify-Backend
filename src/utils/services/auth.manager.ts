@@ -10,6 +10,7 @@ import bcrypt from 'bcrypt';
 import jwtService from './jwt.service';
 import { ObjectId } from 'mongodb';
 import emailManager from './email.service';
+import { UserEditSchema } from '../../routes/user/types';
 
 class AuthManager {
   private static instance: AuthManager;
@@ -251,7 +252,101 @@ class AuthManager {
       response: 'Failed to reset password',
     };
   }
-}
+
+  public async getUserInfo(
+    user_id: string
+  ): Promise<{ status: number; response: string | Record<string, string> }> {
+    try {
+      const user = await this.userDatabaseManager.findOne({
+        _id: new ObjectId(user_id),
+      });
+      if (!user) {
+        return {
+          status: StatusCodes.UNAUTHORIZED,
+          response: 'Invalid token',
+        };
+      }
+      return {
+        status: StatusCodes.OK,
+        response: {
+          username: user.username,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+        },
+      };
+    } catch (error) {
+      console.error('Error in getUserStatus: ' + error);
+    }
+    return {
+      status: StatusCodes.INTERNAL_SERVER_ERROR,
+      response: 'Failed to get user info',
+    };
+  }
+
+  public async editUser(
+    userData: UserEditSchema,
+    userId: string
+  ): Promise<{ status: number; response: string }> {
+    try {
+      if (userData.email) {
+        const user = await this.userDatabaseManager.findOne({
+          email: userData.email,
+        });
+        if (user) {
+          return {
+            status: StatusCodes.CONFLICT,
+            response: 'There is a user with the given email',
+          };
+        }
+      }
+  
+      if (userData.password !== userData.passwordConfirmation) {
+        return {
+          status: StatusCodes.BAD_REQUEST,
+          response: 'The password does not match the confirmation',
+        };
+      }
+  
+      const updateData: Record<string, string> = {};
+  
+      if (userData.firstName !== undefined) {
+        updateData.firstName = userData.firstName;
+      }
+      if (userData.lastName !== undefined) {
+        updateData.lastName = userData.lastName;
+      }
+      if (userData.email !== undefined) {
+        updateData.email = userData.email;
+      }
+      if (userData.password !== undefined) {
+        // הצפנת הסיסמה עם bcrypt לפני העדכון
+        const hashedPassword = await bcrypt.hash(userData.password, 10);
+        updateData.password = hashedPassword;
+      }
+  
+      const result = await this.userDatabaseManager.update(
+        { _id: new ObjectId(userId) },
+        { $set: updateData }
+      );
+  
+      if (result.acknowledged) {
+        return { status: StatusCodes.OK, response: 'Updated successfully!' };
+      } else {
+        return {
+          status: StatusCodes.INTERNAL_SERVER_ERROR,
+          response: 'Update failed',
+        };
+      }
+    } catch (error) {
+      console.error('Error in editUser:', error);
+      return {
+        status: StatusCodes.INTERNAL_SERVER_ERROR,
+        response: 'Failed to update user info',
+      };
+    }
+  }
+ } 
 
 const authManager = AuthManager.getInstance();
 export default authManager;
