@@ -37,7 +37,13 @@ router.post(
     const { status, response } = await authManager.loginUser(loginData);
 
     if (status === StatusCodes.OK) {
-      res.setHeader('Authorization', 'Bearer ' + response);
+      res.cookie('Authorization', 'Bearer ' + response, {
+        httpOnly: true,
+        secure: process.env.PRODUCTION === 'production',
+        sameSite: process.env.PRODUCTION === 'production' ? 'none' : 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+        path: '/',
+      });
 
       res.status(status).send({ response: 'Logged in successfully' });
       return;
@@ -87,6 +93,28 @@ router.post(
       await authManager.resetPassword(resetPasswordData);
 
     res.status(status).send({ response });
+  }
+);
+
+router.post(
+  '/logout',
+  validateAndExtractAuthToken(),
+  (req: Request, res: Response) => {
+    const userId = req.userId;
+
+    if (!userId) {
+      res.status(StatusCodes.UNAUTHORIZED).send({ response: 'Unauthorized' });
+      return;
+    }
+
+    res.clearCookie('Authorization', {
+      httpOnly: true,
+      secure: process.env.PRODUCTION === 'production',
+      sameSite: process.env.PRODUCTION === 'production' ? 'none' : 'lax',
+      path: '/',
+    });
+
+    res.status(StatusCodes.OK).send({ response: 'Logged out successfully' });
   }
 );
 
