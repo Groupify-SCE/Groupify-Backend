@@ -41,11 +41,11 @@ router.post(
         res.setHeader('Authorization', 'Bearer ' + response);
       } else {
         res.cookie('Authorization', 'Bearer ' + response, {
-          httpOnly: true, 
-          secure: process.env.PRODUCTION === 'production', 
+          httpOnly: true,
+          secure: process.env.PRODUCTION === 'production',
           sameSite: process.env.PRODUCTION === 'production' ? 'none' : 'lax',
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
-          path: '/'
+          path: '/',
         });
       }
 
