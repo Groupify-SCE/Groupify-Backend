@@ -1,6 +1,6 @@
 import { StatusCodes } from 'http-status-codes';
 import { DatabaseManager } from './database.manager';
-import { ObjectId } from 'mongodb';
+import { Document, ObjectId, WithId } from 'mongodb';
 
 class ProjectsManager {
   private static instance: ProjectsManager;
@@ -46,6 +46,29 @@ class ProjectsManager {
     return {
       status: StatusCodes.INTERNAL_SERVER_ERROR,
       response: 'Failed to created project',
+    };
+  }
+
+  public async getAllProjects(
+    userId: string
+  ): Promise<{ status: number; response: string | WithId<Document>[] }> {
+    try {
+      const user = await this.userDatabaseManager.findOne({
+        _id: new ObjectId(userId),
+      });
+      if (!user) {
+        return { status: StatusCodes.NOT_FOUND, response: 'User not found' };
+      }
+      const projects = await this.projectsDatabaseManager.find({
+        user: new ObjectId(userId),
+      });
+      return { status: StatusCodes.OK, response: projects };
+    } catch (err) {
+      console.error('Failed to get all projects:', err);
+    }
+    return {
+      status: StatusCodes.INTERNAL_SERVER_ERROR,
+      response: 'Failed to get all projects',
     };
   }
 }
