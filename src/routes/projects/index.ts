@@ -20,31 +20,32 @@ router.post(
 );
 
 router.get(
-    '/get-all',
-    validateAndExtractAuthToken(),
-    async (req: Request, res: Response) => {
-      const userId = req.userId;
-  
-      const { status, response } = await projectsManager.getAllProjects(
-        userId ?? ''
-      );
-      res.status(status).send({ response });
-    }
-  );
-  
-  router.delete(
-    '/delete/:projectId',
-    validateAndExtractAuthToken(),
-    validateData(projectDeleteSchema, 'params'),
-    async (req: Request, res: Response) => {
-      const userId = req.userId;
-      const projectId = req.params.projectId;
-  
-      const { status, response } = await projectsManager.deleteProject(
-        userId ?? '' , projectId
-      );
-      res.status(status).send({ response });
-    }
-  );
+  '/get-all',
+  validateAndExtractAuthToken(),
+  async (req: Request, res: Response) => {
+    const userId = req.userId;
+
+    const { status, response } = await projectsManager.getAllProjects(
+      userId ?? ''
+    );
+    res.status(status).send({ response });
+  }
+);
+
+router.delete(
+  '/delete/:projectId',
+  validateAndExtractAuthToken(),
+  validateData(projectDeleteSchema, 'params'),
+  async (req: Request, res: Response) => {
+    const userId = req.userId;
+    const projectId = req.params.projectId;
+
+    const { status, response } = await projectsManager.deleteProject(
+      userId ?? '',
+      projectId
+    );
+    res.status(status).send({ response });
+  }
+);
 
 export default router;
