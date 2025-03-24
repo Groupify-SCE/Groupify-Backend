@@ -55,6 +55,12 @@ router.get(
   async (req: Request, res: Response) => {
     const userId = req.userId;
     const projectId = req.params.projectId;
+
+    const { status, response } = await projectsManager.getProject(
+      userId ?? '',
+      projectId
+    );
+    res.status(status).send({ response });
   }
 );
 
