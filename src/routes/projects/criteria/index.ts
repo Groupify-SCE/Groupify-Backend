@@ -6,6 +6,8 @@ import {
   projectAddCriterionData,
   projectAddCriterionSchema,
   projectGetAllCriteriaSchema,
+  projectUpdateCriterionData,
+  projectUpdateCriterionSchema,
 } from './types';
 
 const router: Router = express.Router();
@@ -37,6 +39,22 @@ router.get(
     const { status, response } = await projectsManager.getAllCriteria(
       userId ?? '',
       projectId
+    );
+    res.status(status).send({ response });
+  }
+);
+
+router.put(
+  '/update',
+  validateAndExtractAuthToken(),
+  validateData(projectUpdateCriterionSchema),
+  async (req: Request, res: Response) => {
+    const userId = req.userId;
+    const data: projectUpdateCriterionData = req.body;
+
+    const { status, response } = await projectsManager.updateCriterion(
+      userId ?? '',
+      data
     );
     res.status(status).send({ response });
   }

@@ -21,3 +21,16 @@ export const projectGetAllCriteriaSchema = z.object({
 export type projectGetAllCriteriaData = z.infer<
   typeof projectGetAllCriteriaSchema
 >;
+
+export const projectUpdateCriterionSchema = z.object({
+  criterionId: z
+    .string()
+    .min(1)
+    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid ObjectId'),
+  name: z.string().min(1).max(100).optional(),
+  range: z.number().min(1).max(1000).optional(),
+});
+
+export type projectUpdateCriterionData = z.infer<
+  typeof projectUpdateCriterionSchema
+>;
