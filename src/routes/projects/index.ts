@@ -8,8 +8,11 @@ import {
   projectUpdateData,
   projectUpdateSchema,
 } from './types';
+import criteriaRouter from './criteria';
 
 const router: Router = express.Router();
+
+router.use('/criteria', criteriaRouter);
 
 router.post(
   '/create',
@@ -84,4 +87,5 @@ router.put(
     res.status(status).send({ response });
   }
 );
+
 export default router;
