@@ -14,16 +14,16 @@ import {
 const router: Router = express.Router();
 
 router.post(
-  '/add',
+  '/add/:projectId',
   validateAndExtractAuthToken(),
-  validateData(projectAddCriterionSchema),
+  validateData(projectAddCriterionSchema, 'params'),
   async (req: Request, res: Response) => {
     const userId = req.userId;
-    const data: projectAddCriterionData = req.body;
+    const projectId = req.params.projectId;
 
     const { status, response } = await projectsManager.addCriterion(
       userId ?? '',
-      data
+      projectId
     );
     res.status(status).send({ response });
   }

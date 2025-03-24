@@ -202,7 +202,7 @@ class ProjectsManager {
 
   public async addCriterion(
     userId: string,
-    data: projectAddCriterionData
+    projectId: string
   ): Promise<{ status: number; response: string }> {
     try {
       const user = await this.userDatabaseManager.findOne({
@@ -212,7 +212,7 @@ class ProjectsManager {
         return { status: StatusCodes.NOT_FOUND, response: 'User not found' };
       }
       const project = await this.projectsDatabaseManager.findOne({
-        _id: new ObjectId(data.projectId),
+        _id: new ObjectId(projectId),
       });
       if (!project) {
         return { status: StatusCodes.NOT_FOUND, response: 'Project not found' };
@@ -223,10 +223,13 @@ class ProjectsManager {
           response: 'The user dosnt own the project',
         };
       }
+      const criteria = await this.criteriaDatabaseManager.find({
+        project: new ObjectId(projectId),
+      });
       const result = await this.criteriaDatabaseManager.create({
-        project: new ObjectId(data.projectId),
-        name: data.name,
-        range: data.range,
+        project: new ObjectId(projectId),
+        name: `Criterion ${criteria.length + 1}`,
+        range: 100,
       });
       if (result.acknowledged) {
         return {
