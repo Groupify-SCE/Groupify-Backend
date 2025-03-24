@@ -171,14 +171,18 @@ class ProjectsManager {
         {
           _id: project._id,
         },
-        { $set: {
-          ...(data.name !== undefined && { name: data.name }),
-          ...(data.participants !== undefined && {
-            participants: data.participants,
-          }),
-          ...(data.group_size !== undefined && { group_size: data.group_size }),
-        },
-      });
+        {
+          $set: {
+            ...(data.name !== undefined && { name: data.name }),
+            ...(data.participants !== undefined && {
+              participants: data.participants,
+            }),
+            ...(data.group_size !== undefined && {
+              group_size: data.group_size,
+            }),
+          },
+        }
+      );
       if (result.acknowledged) {
         return { status: StatusCodes.OK, response: 'Project updated' };
       }
