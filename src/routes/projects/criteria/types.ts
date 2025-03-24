@@ -21,4 +21,3 @@ export const projectGetAllCriteriaSchema = z.object({
 export type projectGetAllCriteriaData = z.infer<
   typeof projectGetAllCriteriaSchema
 >;
-

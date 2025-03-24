@@ -2,7 +2,11 @@ import express, { Router, Request, Response } from 'express';
 import { validateAndExtractAuthToken } from '../../../utils/middleware/authToken.middleware';
 import projectsManager from '../../../utils/services/projects.manager';
 import { validateData } from '../../../utils/middleware/validation.middleware';
-import { projectAddCriterionData, projectAddCriterionSchema, projectGetAllCriteriaSchema } from './types';
+import {
+  projectAddCriterionData,
+  projectAddCriterionSchema,
+  projectGetAllCriteriaSchema,
+} from './types';
 
 const router: Router = express.Router();
 
