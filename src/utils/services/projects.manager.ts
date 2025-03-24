@@ -239,6 +239,42 @@ class ProjectsManager {
       response: 'Failed to add criterion',
     };
   }
+
+  public async getAllCriteria(
+    userId: string,
+    projectId: string
+  ): Promise<{ status: number; response: string | WithId<Document>[] }> {
+    try {
+      const user = await this.userDatabaseManager.findOne({
+        _id: new ObjectId(userId),
+      });
+      if (!user) {
+        return { status: StatusCodes.NOT_FOUND, response: 'User not found' };
+      }
+      const project = await this.projectsDatabaseManager.findOne({
+        _id: new ObjectId(projectId),
+      });
+      if (!project) {
+        return { status: StatusCodes.NOT_FOUND, response: 'Project not found' };
+      }
+      if (project.user.toString() !== user._id.toString()) {
+        return {
+          status: StatusCodes.FORBIDDEN,
+          response: 'The user dosnt own the project',
+        };
+      }
+      const criteria = await this.criteriaDatabaseManager.find({
+        project: new ObjectId(projectId),
+      });
+      return { status: StatusCodes.OK, response: criteria };
+    } catch (err) {
+      console.error('Failed to get all criteria:', err);
+    }
+    return {
+      status: StatusCodes.INTERNAL_SERVER_ERROR,
+      response: 'Failed to get all criteria',
+    };
+  }
 }
 
 const projectsManager = ProjectsManager.getInstance();
