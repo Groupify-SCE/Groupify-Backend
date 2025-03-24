@@ -17,4 +17,17 @@ router.post(
   }
 );
 
+router.get(
+    '/get-all',
+    validateAndExtractAuthToken(),
+    async (req: Request, res: Response) => {
+      const userId = req.userId;
+  
+      const { status, response } = await projectsManager.getAllProjects(
+        userId ?? ''
+      );
+      res.status(status).send({ response });
+    }
+  );
+
 export default router;
