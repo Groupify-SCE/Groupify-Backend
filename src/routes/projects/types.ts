@@ -26,10 +26,7 @@ export const projectUpdateSchema = z.object({
 
   name: z.string().min(1).optional(),
   participants: z.number().min(1).optional(),
-  registrants: z.number().min(1).optional(),
   group_size: z.number().min(1).optional(),
-  preferences: z.number().min(1).optional(),
 });
 
 export type projectUpdateData = z.infer<typeof projectUpdateSchema>;
-

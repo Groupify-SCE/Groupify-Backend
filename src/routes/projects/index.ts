@@ -2,7 +2,12 @@ import express, { Router, Request, Response } from 'express';
 import { validateAndExtractAuthToken } from '../../utils/middleware/authToken.middleware';
 import projectsManager from '../../utils/services/projects.manager';
 import { validateData } from '../../utils/middleware/validation.middleware';
-import { projectDeleteSchema, projectGetSchema, projectUpdateData, projectUpdateSchema } from './types';
+import {
+  projectDeleteSchema,
+  projectGetSchema,
+  projectUpdateData,
+  projectUpdateSchema,
+} from './types';
 
 const router: Router = express.Router();
 
@@ -71,6 +76,12 @@ router.put(
   async (req: Request, res: Response) => {
     const userId = req.userId;
     const data: projectUpdateData = req.body;
+
+    const { status, response } = await projectsManager.updateProject(
+      userId ?? '',
+      data
+    );
+    res.status(status).send({ response });
   }
 );
 export default router;
