@@ -10,3 +10,15 @@ export const projectAddCriterionSchema = z.object({
 });
 
 export type projectAddCriterionData = z.infer<typeof projectAddCriterionSchema>;
+
+export const projectGetAllCriteriaSchema = z.object({
+  projectId: z
+    .string()
+    .min(1)
+    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid ObjectId'),
+});
+
+export type projectGetAllCriteriaData = z.infer<
+  typeof projectGetAllCriteriaSchema
+>;
+
