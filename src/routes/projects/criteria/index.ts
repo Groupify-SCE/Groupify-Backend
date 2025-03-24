@@ -68,6 +68,12 @@ router.delete(
   async (req: Request, res: Response) => {
     const userId = req.userId;
     const criterionId = req.params.criterionId;
+
+    const { status, response } = await projectsManager.deleteCriterion(
+      userId ?? '',
+      criterionId
+    );
+    res.status(status).send({ response });
   }
 );
 
