@@ -3,6 +3,8 @@ import { validateAndExtractAuthToken } from '../../utils/middleware/authToken.mi
 import projectsManager from '../../utils/services/projects.manager';
 import { validateData } from '../../utils/middleware/validation.middleware';
 import {
+  projectAddCriterionData,
+  projectAddCriterionSchema,
   projectDeleteSchema,
   projectGetSchema,
   projectUpdateData,
@@ -84,4 +86,16 @@ router.put(
     res.status(status).send({ response });
   }
 );
+
+router.post(
+  '/add-criterion',
+  validateAndExtractAuthToken(),
+  validateData(projectAddCriterionSchema),
+  async (req: Request, res: Response) => {
+    const userId = req.userId;
+    const data: projectAddCriterionData = req.body;
+
+  }
+);
+
 export default router;
