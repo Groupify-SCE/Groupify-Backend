@@ -2,7 +2,7 @@ import express, { Router, Request, Response } from 'express';
 import { validateAndExtractAuthToken } from '../../utils/middleware/authToken.middleware';
 import projectsManager from '../../utils/services/projects.manager';
 import { validateData } from '../../utils/middleware/validation.middleware';
-import { projectDeleteSchema } from './types';
+import { projectDeleteSchema, projectGetSchema } from './types';
 
 const router: Router = express.Router();
 
@@ -45,6 +45,16 @@ router.delete(
       projectId
     );
     res.status(status).send({ response });
+  }
+);
+
+router.get(
+  '/get/:projectId',
+  validateAndExtractAuthToken(),
+  validateData(projectGetSchema, 'params'),
+  async (req: Request, res: Response) => {
+    const userId = req.userId;
+    const projectId = req.params.projectId;
   }
 );
 
