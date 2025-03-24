@@ -17,3 +17,16 @@ export const projectGetSchema = z.object({
 });
 
 export type projectGetData = z.infer<typeof projectGetSchema>;
+
+export const projectUpdateSchema = z.object({
+  projectId: z
+    .string()
+    .min(1)
+    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid ObjectId'),
+
+  name: z.string().min(1).optional(),
+  participants: z.number().min(1).optional(),
+  group_size: z.number().min(1).optional(),
+});
+
+export type projectUpdateData = z.infer<typeof projectUpdateSchema>;

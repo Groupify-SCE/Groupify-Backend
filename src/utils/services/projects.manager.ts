@@ -1,6 +1,7 @@
 import { StatusCodes } from 'http-status-codes';
 import { DatabaseManager } from './database.manager';
 import { Document, ObjectId, WithId } from 'mongodb';
+import { projectUpdateData } from '../../routes/projects/types';
 
 class ProjectsManager {
   private static instance: ProjectsManager;
@@ -140,6 +141,53 @@ class ProjectsManager {
     return {
       status: StatusCodes.INTERNAL_SERVER_ERROR,
       response: 'Failed to get project',
+    };
+  }
+
+  public async updateProject(
+    userId: string,
+    data: projectUpdateData
+  ): Promise<{ status: number; response: string }> {
+    try {
+      const user = await this.userDatabaseManager.findOne({
+        _id: new ObjectId(userId),
+      });
+      if (!user) {
+        return { status: StatusCodes.NOT_FOUND, response: 'User not found' };
+      }
+      const project = await this.projectsDatabaseManager.findOne({
+        _id: new ObjectId(data.projectId),
+      });
+      if (!project) {
+        return { status: StatusCodes.NOT_FOUND, response: 'Project not found' };
+      }
+      if (project.user.toString() !== user._id.toString()) {
+        return {
+          status: StatusCodes.FORBIDDEN,
+          response: 'The user dosnt own the project',
+        };
+      }
+      const result = await this.projectsDatabaseManager.update(
+        {
+          _id: project._id,
+        },
+        { $set: {
+          ...(data.name !== undefined && { name: data.name }),
+          ...(data.participants !== undefined && {
+            participants: data.participants,
+          }),
+          ...(data.group_size !== undefined && { group_size: data.group_size }),
+        },
+      });
+      if (result.acknowledged) {
+        return { status: StatusCodes.OK, response: 'Project updated' };
+      }
+    } catch (err) {
+      console.error('Failed to update project:', err);
+    }
+    return {
+      status: StatusCodes.INTERNAL_SERVER_ERROR,
+      response: 'Failed to update project',
     };
   }
 }
