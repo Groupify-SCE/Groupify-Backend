@@ -5,6 +5,7 @@ import { validateData } from '../../../utils/middleware/validation.middleware';
 import {
   projectAddCriterionData,
   projectAddCriterionSchema,
+  projectDeleteCriterionSchema,
   projectGetAllCriteriaSchema,
   projectUpdateCriterionData,
   projectUpdateCriterionSchema,
@@ -55,6 +56,22 @@ router.put(
     const { status, response } = await projectsManager.updateCriterion(
       userId ?? '',
       data
+    );
+    res.status(status).send({ response });
+  }
+);
+
+router.delete(
+  '/delete/:criterionId',
+  validateAndExtractAuthToken(),
+  validateData(projectDeleteCriterionSchema, 'params'),
+  async (req: Request, res: Response) => {
+    const userId = req.userId;
+    const criterionId = req.params.criterionId;
+
+    const { status, response } = await projectsManager.deleteCriterion(
+      userId ?? '',
+      criterionId
     );
     res.status(status).send({ response });
   }
