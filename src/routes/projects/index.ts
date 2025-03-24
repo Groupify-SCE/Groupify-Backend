@@ -40,8 +40,10 @@ router.get(
       const userId = req.userId;
       const projectId = req.params.projectId;
   
-      
-      
+      const { status, response } = await projectsManager.deleteProject(
+        userId ?? '' , projectId
+      );
+      res.status(status).send({ response });
     }
   );
 
