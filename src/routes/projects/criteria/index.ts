@@ -52,6 +52,11 @@ router.put(
     const userId = req.userId;
     const data: projectUpdateCriterionData = req.body;
 
+    const { status, response } = await projectsManager.updateCriterion(
+      userId ?? '',
+      data
+    );
+    res.status(status).send({ response });
   }
 );
 

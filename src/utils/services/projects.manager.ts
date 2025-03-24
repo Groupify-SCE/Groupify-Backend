@@ -2,7 +2,10 @@ import { StatusCodes } from 'http-status-codes';
 import { DatabaseManager } from './database.manager';
 import { Document, ObjectId, WithId } from 'mongodb';
 import { projectUpdateData } from '../../routes/projects/types';
-import { projectAddCriterionData } from '../../routes/projects/criteria/types';
+import {
+  projectAddCriterionData,
+  projectUpdateCriterionData,
+} from '../../routes/projects/criteria/types';
 
 class ProjectsManager {
   private static instance: ProjectsManager;
@@ -273,6 +276,61 @@ class ProjectsManager {
     return {
       status: StatusCodes.INTERNAL_SERVER_ERROR,
       response: 'Failed to get all criteria',
+    };
+  }
+
+  public async updateCriterion(
+    userId: string,
+    data: projectUpdateCriterionData
+  ): Promise<{ status: number; response: string }> {
+    try {
+      const user = await this.userDatabaseManager.findOne({
+        _id: new ObjectId(userId),
+      });
+      if (!user) {
+        return { status: StatusCodes.NOT_FOUND, response: 'User not found' };
+      }
+      const criterion = await this.criteriaDatabaseManager.findOne({
+        _id: new ObjectId(data.criterionId),
+      });
+      if (!criterion) {
+        return {
+          status: StatusCodes.NOT_FOUND,
+          response: 'Criterion not found',
+        };
+      }
+      const project = await this.projectsDatabaseManager.findOne({
+        _id: new ObjectId(criterion.project.toString()),
+      });
+      if (!project) {
+        return { status: StatusCodes.NOT_FOUND, response: 'Project not found' };
+      }
+      if (project.user.toString() !== user._id.toString()) {
+        return {
+          status: StatusCodes.FORBIDDEN,
+          response: 'The user dosnt own the project',
+        };
+      }
+      const result = await this.criteriaDatabaseManager.update(
+        {
+          _id: criterion._id,
+        },
+        {
+          $set: {
+            ...(data.name !== undefined && { name: data.name }),
+            ...(data.range !== undefined && { range: data.range }),
+          },
+        }
+      );
+      if (result.acknowledged) {
+        return { status: StatusCodes.OK, response: 'Criterion updated' };
+      }
+    } catch (err) {
+      console.error('Failed to update criterion:', err);
+    }
+    return {
+      status: StatusCodes.INTERNAL_SERVER_ERROR,
+      response: 'Failed to update criterion',
     };
   }
 }
