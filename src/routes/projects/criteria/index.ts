@@ -25,10 +25,16 @@ router.post(
 router.get(
   '/get-all/:projectId',
   validateAndExtractAuthToken(),
-  validateData(projectGetAllCriteriaSchema),
+  validateData(projectGetAllCriteriaSchema, 'params'),
   async (req: Request, res: Response) => {
     const userId = req.userId;
     const projectId = req.params.projectId;
+
+    const { status, response } = await projectsManager.getAllCriteria(
+      userId ?? '',
+      projectId
+    );
+    res.status(status).send({ response });
   }
 );
 
