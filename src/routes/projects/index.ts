@@ -3,15 +3,16 @@ import { validateAndExtractAuthToken } from '../../utils/middleware/authToken.mi
 import projectsManager from '../../utils/services/projects.manager';
 import { validateData } from '../../utils/middleware/validation.middleware';
 import {
-  projectAddCriterionData,
-  projectAddCriterionSchema,
   projectDeleteSchema,
   projectGetSchema,
   projectUpdateData,
   projectUpdateSchema,
 } from './types';
+import criteriaRouter from './criteria';
 
 const router: Router = express.Router();
+
+router.use('/criteria', criteriaRouter);
 
 router.post(
   '/create',
@@ -84,17 +85,6 @@ router.put(
       data
     );
     res.status(status).send({ response });
-  }
-);
-
-router.post(
-  '/add-criterion',
-  validateAndExtractAuthToken(),
-  validateData(projectAddCriterionSchema),
-  async (req: Request, res: Response) => {
-    const userId = req.userId;
-    const data: projectAddCriterionData = req.body;
-
   }
 );
 
