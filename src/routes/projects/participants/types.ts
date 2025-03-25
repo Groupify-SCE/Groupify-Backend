@@ -22,6 +22,6 @@ export const projectAddParticipantSchema = z.object({
     .optional(),
 });
 
-export type projectAddparticipantData = z.infer<
+export type projectAddParticipantData = z.infer<
   typeof projectAddParticipantSchema
 >;
