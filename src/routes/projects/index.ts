@@ -9,10 +9,12 @@ import {
   projectUpdateSchema,
 } from './types';
 import criteriaRouter from './criteria';
+import participantsRouter from './participants';
 
 const router: Router = express.Router();
 
 router.use('/criteria', criteriaRouter);
+router.use('/participants', participantsRouter);
 
 router.post(
   '/create',

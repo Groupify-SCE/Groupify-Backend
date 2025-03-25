@@ -3,7 +3,6 @@ import { validateAndExtractAuthToken } from '../../../utils/middleware/authToken
 import projectsManager from '../../../utils/services/projects.manager';
 import { validateData } from '../../../utils/middleware/validation.middleware';
 import {
-  projectAddCriterionData,
   projectAddCriterionSchema,
   projectDeleteCriterionSchema,
   projectGetAllCriteriaSchema,
