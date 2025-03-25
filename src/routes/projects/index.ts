@@ -13,6 +13,7 @@ import criteriaRouter from './criteria';
 const router: Router = express.Router();
 
 router.use('/criteria', criteriaRouter);
+router.use('/Participants', criteriaRouter);
 
 router.post(
   '/create',
