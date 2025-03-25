@@ -2,16 +2,15 @@ import { StatusCodes } from 'http-status-codes';
 import { DatabaseManager } from './database.manager';
 import { Document, ObjectId, WithId } from 'mongodb';
 import { projectUpdateData } from '../../routes/projects/types';
-import {
-  projectAddCriterionData,
-  projectUpdateCriterionData,
-} from '../../routes/projects/criteria/types';
+import { projectUpdateCriterionData } from '../../routes/projects/criteria/types';
+import { projectAddParticipantData } from '../../routes/projects/participants/types';
 
 class ProjectsManager {
   private static instance: ProjectsManager;
   private userDatabaseManager = new DatabaseManager('Users');
   private projectsDatabaseManager = new DatabaseManager('Projects');
   private criteriaDatabaseManager = new DatabaseManager('Criteria');
+  private participantsDatabaseManager = new DatabaseManager('Participants');
 
   private constructor() {}
 
@@ -381,6 +380,59 @@ class ProjectsManager {
     return {
       status: StatusCodes.INTERNAL_SERVER_ERROR,
       response: 'Failed to delete criterion',
+    };
+  }
+
+  public async addParticipant(
+    userId: string,
+    data: projectAddParticipantData
+  ): Promise<{ status: number; response: string }> {
+    try {
+      const user = await this.userDatabaseManager.findOne({
+        _id: new ObjectId(userId),
+      });
+      if (!user) {
+        return { status: StatusCodes.NOT_FOUND, response: 'User not found' };
+      }
+      const project = await this.projectsDatabaseManager.findOne({
+        _id: new ObjectId(data.projectId),
+      });
+      if (!project) {
+        return { status: StatusCodes.NOT_FOUND, response: 'Project not found' };
+      }
+      if (project.user.toString() !== user._id.toString()) {
+        return {
+          status: StatusCodes.FORBIDDEN,
+          response: 'The user dosnt own the project',
+        };
+      }
+      const participant = await this.participantsDatabaseManager.find({
+        tz: data.tz,
+      });
+      if (participant.length !== 0) {
+        return {
+          status: StatusCodes.CONFLICT,
+          response: 'Participant already exists',
+        };
+      }
+      const result = await this.participantsDatabaseManager.create({
+        projectId: new ObjectId(data.projectId),
+        firstName: data.firstName,
+        lastName: data.lastName,
+        tz: data.tz,
+      });
+      if (result.acknowledged) {
+        return {
+          status: StatusCodes.OK,
+          response: 'Participant added',
+        };
+      }
+    } catch (err) {
+      console.error('Failed to add participant:', err);
+    }
+    return {
+      status: StatusCodes.INTERNAL_SERVER_ERROR,
+      response: 'Failed to add participant',
     };
   }
 }
