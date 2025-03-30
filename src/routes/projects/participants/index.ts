@@ -5,6 +5,8 @@ import { validateData } from '../../../utils/middleware/validation.middleware';
 import {
   projectAddParticipantSchema,
   projectAddParticipantData,
+  projectGetAllParticipantSchema,
+  projectGetAllParticipantData,
 } from './types';
 
 const router: Router = express.Router();
@@ -20,6 +22,22 @@ router.post(
     const { status, response } = await projectsManager.addParticipant(
       userId ?? '',
       data
+    );
+    res.status(status).send({ response });
+  }
+);
+
+router.get(
+  '/get-all/:projectId',
+  validateAndExtractAuthToken(),
+  validateData(projectGetAllParticipantSchema, 'params'),
+  async (req: Request, res: Response) => {
+    const userId = req.userId;
+    const projectId = req.params.projectId;
+
+    const { status, response } = await projectsManager.getAllParticipants(
+      userId ?? '',
+      projectId
     );
     res.status(status).send({ response });
   }

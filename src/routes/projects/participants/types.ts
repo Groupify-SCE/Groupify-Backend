@@ -25,3 +25,14 @@ export const projectAddParticipantSchema = z.object({
 export type projectAddParticipantData = z.infer<
   typeof projectAddParticipantSchema
 >;
+
+export const projectGetAllParticipantSchema = z.object({
+  projectId: z
+    .string()
+    .min(1)
+    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid ObjectId'),
+});
+
+export type projectGetAllParticipantData = z.infer<
+  typeof projectGetAllParticipantSchema
+>;

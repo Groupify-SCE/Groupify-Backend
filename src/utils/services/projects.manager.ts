@@ -435,6 +435,45 @@ class ProjectsManager {
       response: 'Failed to add participant',
     };
   }
+
+  public async getAllParticipants(
+    userId: string,
+    projectId: string
+  ): Promise<{ status: number; response: string | WithId<Document>[] }> {
+    try {
+      const user = await this.userDatabaseManager.findOne({
+        _id: new ObjectId(userId),
+      });
+      if (!user) {
+        return { status: StatusCodes.NOT_FOUND, response: 'User not found' };
+      }
+      const project = await this.projectsDatabaseManager.findOne({
+        _id: new ObjectId(projectId),
+      });
+      if (!project) {
+        return { status: StatusCodes.NOT_FOUND, response: 'Project not found' };
+      }
+      if (project.user.toString() !== user._id.toString()) {
+        return {
+          status: StatusCodes.FORBIDDEN,
+          response: 'The user dosnt own the project',
+        };
+      }
+      const participants = await this.participantsDatabaseManager.find({
+        projectId: project._id
+      });
+      return {
+        status: StatusCodes.OK,
+        response: participants,
+      };
+    } catch (err) {
+      console.error('Failed to add participant:', err);
+    }
+    return {
+      status: StatusCodes.INTERNAL_SERVER_ERROR,
+      response: 'Failed to add participant',
+    };
+  }
 }
 
 const projectsManager = ProjectsManager.getInstance();
