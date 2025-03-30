@@ -36,3 +36,14 @@ export const projectGetAllParticipantSchema = z.object({
 export type projectGetAllParticipantData = z.infer<
   typeof projectGetAllParticipantSchema
 >;
+
+export const projectGetParticipantIdSchema = z.object({
+  participantId: z
+    .string()
+    .min(1)
+    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid ObjectId'),
+});
+
+export type projectGetParticipantIdData = z.infer<
+  typeof projectGetParticipantIdSchema
+>;

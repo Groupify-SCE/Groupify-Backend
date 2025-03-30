@@ -6,7 +6,7 @@ import {
   projectAddParticipantSchema,
   projectAddParticipantData,
   projectGetAllParticipantSchema,
-  projectGetAllParticipantData,
+  projectGetParticipantIdSchema,
 } from './types';
 
 const router: Router = express.Router();
@@ -38,6 +38,22 @@ router.get(
     const { status, response } = await projectsManager.getAllParticipants(
       userId ?? '',
       projectId
+    );
+    res.status(status).send({ response });
+  }
+);
+
+router.get(
+  '/criteria/get/:participantId',
+  validateAndExtractAuthToken(),
+  validateData(projectGetParticipantIdSchema, 'params'),
+  async (req: Request, res: Response) => {
+    const userId = req.userId;
+    const participantId = req.params.participantId;
+
+    const { status, response } = await projectsManager.getParticipantCriteria(
+      userId ?? '',
+      participantId
     );
     res.status(status).send({ response });
   }
