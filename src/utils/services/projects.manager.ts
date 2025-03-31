@@ -461,6 +461,16 @@ class ProjectsManager {
         tz: data.tz,
       });
       if (result.acknowledged) {
+        const criteria = await this.criteriaDatabaseManager.find({
+          project: project._id,
+        });
+        for (const criterion of criteria) {
+          await this.participantCriteriaDatabaseManager.create({
+            participant: result.insertedId,
+            criterion: criterion._id,
+            value: 0,
+          });
+        }
         return {
           status: StatusCodes.OK,
           response: 'Participant added',
