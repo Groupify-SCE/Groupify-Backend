@@ -105,6 +105,15 @@ class ProjectsManager {
         _id: project._id,
       });
       if (result.acknowledged) {
+        await this.criteriaDatabaseManager.delete({
+          project: project._id
+        })
+        await this.participantsDatabaseManager.delete({
+          projectId: project._id
+        })
+        await this.participantCriteriaDatabaseManager.delete({
+          participant: project._id
+        })
         return { status: StatusCodes.OK, response: 'Project deleted' };
       }
     } catch (err) {
