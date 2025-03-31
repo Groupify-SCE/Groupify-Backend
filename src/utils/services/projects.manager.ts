@@ -11,7 +11,9 @@ class ProjectsManager {
   private projectsDatabaseManager = new DatabaseManager('Projects');
   private criteriaDatabaseManager = new DatabaseManager('Criteria');
   private participantsDatabaseManager = new DatabaseManager('Participants');
-  private participantCriteriaDatabaseManager = new DatabaseManager('Participants_Criteria');
+  private participantCriteriaDatabaseManager = new DatabaseManager(
+    'Participants_Criteria'
+  );
 
   private constructor() {}
 
@@ -105,6 +107,15 @@ class ProjectsManager {
         _id: project._id,
       });
       if (result.acknowledged) {
+        await this.criteriaDatabaseManager.delete({
+          project: project._id,
+        });
+        await this.participantsDatabaseManager.delete({
+          projectId: project._id,
+        });
+        await this.participantCriteriaDatabaseManager.delete({
+          participant: project._id,
+        });
         return { status: StatusCodes.OK, response: 'Project deleted' };
       }
     } catch (err) {
@@ -232,6 +243,16 @@ class ProjectsManager {
         range: 100,
       });
       if (result.acknowledged) {
+        const participants = await this.participantsDatabaseManager.find({
+          projectId: project._id,
+        });
+        for (const participant of participants) {
+          await this.participantCriteriaDatabaseManager.create({
+            participant: participant._id,
+            criterion: result.insertedId,
+            value: 0,
+          });
+        }
         return {
           status: StatusCodes.OK,
           response: 'Criterion added',
@@ -326,6 +347,20 @@ class ProjectsManager {
         }
       );
       if (result.acknowledged) {
+        if (data.range !== undefined) {
+          const participantsCriteria =
+            await this.participantCriteriaDatabaseManager.find({
+              criterion: criterion._id,
+            });
+          for (const participantCriterion of participantsCriteria) {
+            if (participantCriterion.value > data.range) {
+              await this.participantCriteriaDatabaseManager.update(
+                { _id: participantCriterion._id },
+                { $set: { value: data.range } }
+              );
+            }
+          }
+        }
         return { status: StatusCodes.OK, response: 'Criterion updated' };
       }
     } catch (err) {
@@ -373,6 +408,9 @@ class ProjectsManager {
         _id: criterion._id,
       });
       if (result.acknowledged) {
+        await this.participantCriteriaDatabaseManager.delete({
+          criterion: criterion._id,
+        });
         return { status: StatusCodes.OK, response: 'Criterion deleted' };
       }
     } catch (err) {
@@ -423,6 +461,16 @@ class ProjectsManager {
         tz: data.tz,
       });
       if (result.acknowledged) {
+        const criteria = await this.criteriaDatabaseManager.find({
+          project: project._id,
+        });
+        for (const criterion of criteria) {
+          await this.participantCriteriaDatabaseManager.create({
+            participant: result.insertedId,
+            criterion: criterion._id,
+            value: 0,
+          });
+        }
         return {
           status: StatusCodes.OK,
           response: 'Participant added',
@@ -461,7 +509,7 @@ class ProjectsManager {
         };
       }
       const participants = await this.participantsDatabaseManager.find({
-        projectId: project._id
+        projectId: project._id,
       });
       return {
         status: StatusCodes.OK,
@@ -491,11 +539,14 @@ class ProjectsManager {
         _id: new ObjectId(participantId),
       });
       if (!participant) {
-        return { status: StatusCodes.NOT_FOUND, response: 'Participant not found' };
+        return {
+          status: StatusCodes.NOT_FOUND,
+          response: 'Participant not found',
+        };
       }
       const project = await this.projectsDatabaseManager.findOne({
         _id: participant.projectId,
-      })
+      });
       if (!project) {
         return { status: StatusCodes.NOT_FOUND, response: 'Project not found' };
       }
@@ -506,7 +557,7 @@ class ProjectsManager {
         };
       }
       const criteria = await this.participantCriteriaDatabaseManager.find({
-        participant: participant._id
+        participant: participant._id,
       });
       return {
         status: StatusCodes.OK,
