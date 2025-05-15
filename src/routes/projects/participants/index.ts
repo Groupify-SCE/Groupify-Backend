@@ -7,6 +7,8 @@ import {
   projectAddParticipantData,
   projectGetAllParticipantSchema,
   projectGetParticipantIdSchema,
+  projectUpdateParticipantCriteriaSchema,
+  projectUpdateParticipantCriteriaData,
 } from './types';
 
 const router: Router = express.Router();
@@ -55,6 +57,25 @@ router.get(
       userId ?? '',
       participantId
     );
+    res.status(status).send({ response });
+  }
+);
+
+router.put(
+  '/criteria/update/:participantId',
+  validateAndExtractAuthToken(),
+  validateData(projectUpdateParticipantCriteriaSchema),
+  async (req: Request, res: Response) => {
+    const userId = req.userId;
+    const participantId = req.params.participantId;
+    const data: projectUpdateParticipantCriteriaData = req.body;
+
+    const { status, response } = await projectsManager.updateParticipantCriteria(
+      userId ?? '',
+      participantId,
+      data.criteria
+    );
+
     res.status(status).send({ response });
   }
 );
