@@ -8,6 +8,8 @@ import {
   projectGetAllCriteriaSchema,
   projectUpdateCriterionData,
   projectUpdateCriterionSchema,
+  projectGetCriteriaByProjectSchema,
+  projectGetCriteriaByProjectData,
 } from './types';
 
 const router: Router = express.Router();
@@ -40,6 +42,7 @@ router.get(
       userId ?? '',
       projectId
     );
+    
     res.status(status).send({ response });
   }
 );
