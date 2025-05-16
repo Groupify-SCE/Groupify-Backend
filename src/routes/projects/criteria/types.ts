@@ -43,3 +43,14 @@ export const projectDeleteCriterionSchema = z.object({
 export type projectDeleteCriterionData = z.infer<
   typeof projectDeleteCriterionSchema
 >;
+
+export const projectGetCriteriaByProjectSchema = z.object({
+  projectId: z
+    .string()
+    .min(1)
+    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid ObjectId'),
+});
+
+export type projectGetCriteriaByProjectData = z.infer<
+  typeof projectGetCriteriaByProjectSchema
+>;
