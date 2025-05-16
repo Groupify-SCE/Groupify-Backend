@@ -80,4 +80,22 @@ router.put(
   }
 );
 
+  router.delete(
+    '/delete/:projectId/:participantId',
+    validateAndExtractAuthToken(),
+    validateData(projectGetParticipantIdSchema, 'params'),
+    async (req: Request, res: Response) => {
+      const userId = req.userId;
+      const { projectId, participantId } = req.params;
+  
+      const { status, response } = await projectsManager.deleteParticipant(
+        userId ?? '',
+        projectId,
+        participantId
+      );
+  
+      res.status(status).send({ response });
+    }
+);
+
 export default router;

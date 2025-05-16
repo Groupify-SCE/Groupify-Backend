@@ -585,6 +585,64 @@ class ProjectsManager {
     };
   }
 
+  public async deleteParticipant(
+    userId: string,
+    projectId: string,
+    participantId: string
+  ): Promise<{ status: number; response: string }> {
+    try {
+      const user = await this.userDatabaseManager.findOne({
+        _id: new ObjectId(userId),
+      });
+      if (!user) {
+        return { status: StatusCodes.NOT_FOUND, response: 'User not found' };
+      }
+  
+      const project = await this.projectsDatabaseManager.findOne({
+        _id: new ObjectId(projectId),
+      });
+      if (!project) {
+        return { status: StatusCodes.NOT_FOUND, response: 'Project not found' };
+      }
+  
+      if (project.user.toString() !== user._id.toString()) {
+        return {
+          status: StatusCodes.FORBIDDEN,
+          response: 'The user does not own the project',
+        };
+      }
+  
+      const participant = await this.participantsDatabaseManager.findOne({
+        _id: new ObjectId(participantId),
+      });
+      if (!participant) {
+        return { status: StatusCodes.NOT_FOUND, response: 'Participant not found' };
+      }
+  
+      const result = await this.participantsDatabaseManager.delete({
+        _id: participant._id,
+      });
+  
+      if (result.acknowledged) {
+        await this.participantCriteriaDatabaseManager.delete({
+          participant: participant._id,
+        });
+  
+        return {
+          status: StatusCodes.OK,
+          response: 'Participant deleted successfully',
+        };
+      }
+    } catch (err) {
+      console.error('Failed to delete participant:', err);
+    }
+  
+    return {
+      status: StatusCodes.INTERNAL_SERVER_ERROR,
+      response: 'Failed to delete participant',
+    };
+  }  
+
   public async updateParticipantCriteria(
     userId: string,
     participantId: string,
