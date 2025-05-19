@@ -705,6 +705,53 @@ class ProjectsManager {
     }
   }
   
+  public async updateAllParticipants(
+    userId: string,
+    projectId: string,
+    participants: {
+      _id: string;
+      firstName: string;
+      lastName: string;
+      tz: string;
+    }[]
+  ): Promise<{ status: number; response: string }> {
+    try {
+      const user = await this.userDatabaseManager.findOne({ _id: new ObjectId(userId) });
+      if (!user) {
+        return { status: StatusCodes.NOT_FOUND, response: 'User not found' };
+      }
+  
+      const project = await this.projectsDatabaseManager.findOne({ _id: new ObjectId(projectId) });
+      if (!project || project.user.toString() !== user._id.toString()) {
+        return { status: StatusCodes.FORBIDDEN, response: 'Unauthorized project access' };
+      }
+  
+      for (const p of participants) {
+        await this.participantsDatabaseManager.update(
+          { _id: new ObjectId(p._id) },
+          {
+            $set: {
+              firstName: p.firstName,
+              lastName: p.lastName,
+              tz: p.tz,
+            },
+          }
+        );
+      }
+  
+      return {
+        status: StatusCodes.OK,
+        response: 'Participants updated successfully',
+      };
+    } catch (err) {
+      console.error('❌ Failed to update participants:', err);
+      return {
+        status: StatusCodes.INTERNAL_SERVER_ERROR,
+        response: 'Failed to update participants',
+      };
+    }
+  }
+  
 }
 
 const projectsManager = ProjectsManager.getInstance();
