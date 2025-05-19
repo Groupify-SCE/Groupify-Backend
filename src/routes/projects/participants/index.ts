@@ -98,4 +98,22 @@ router.put(
     }
 );
 
+router.put(
+  '/update-all/:projectId',
+  validateAndExtractAuthToken(),
+  async (req: Request, res: Response) => {
+    const userId = req.userId;
+    const { projectId } = req.params;
+    const { participants } = req.body;
+
+    const { status, response } = await projectsManager.updateAllParticipants(
+      userId ?? '',
+      projectId,
+      participants
+    );
+
+    res.status(status).send({ response });
+  }
+);
+
 export default router;
