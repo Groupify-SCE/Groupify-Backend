@@ -1017,6 +1017,28 @@ class ProjectsManager {
 
     return students;
   }
+
+  public async getAlgorithmResults(userId: string, projectId: string) {
+    const project = await this.projectsDatabaseManager.findOne({
+      _id: new ObjectId(projectId),
+    });
+    if (!project) {
+      return { status: StatusCodes.NOT_FOUND, response: 'Project not found' };
+    }
+    if (project.user.toString() !== userId) {
+      return {
+        status: StatusCodes.FORBIDDEN,
+        response: 'Unauthorized project access',
+      };
+    }
+    const groups = await this.groupsDatabaseManager.findOne({
+      _id: new ObjectId(projectId),
+    });
+    if (!groups) {
+      return { status: StatusCodes.NOT_FOUND, response: 'Groups not found' };
+    }
+    return { status: StatusCodes.OK, response: groups.groups };
+  }
 }
 
 function makeCode() {
