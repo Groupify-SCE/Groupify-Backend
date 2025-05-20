@@ -5,11 +5,19 @@ import { validateData } from '../../utils/middleware/validation.middleware';
 import {
   projectDeleteSchema,
   projectGetSchema,
+  projectPreferencesSaveData,
+  projectPreferencesSaveSchema,
+  projectSearchSchema,
   projectUpdateData,
   projectUpdateSchema,
 } from './types';
+import criteriaRouter from './criteria';
+import participantsRouter from './participants';
 
 const router: Router = express.Router();
+
+router.use('/criteria', criteriaRouter);
+router.use('/participants', participantsRouter);
 
 router.post(
   '/create',
@@ -84,4 +92,28 @@ router.put(
     res.status(status).send({ response });
   }
 );
+
+router.get(
+  '/search/:code',
+  validateData(projectSearchSchema, 'params'),
+  async (req: Request, res: Response) => {
+    const code = req.params.code;
+
+    const { status, response } = await projectsManager.searchProject(code);
+    res.status(status).send({ response });
+  }
+);
+
+router.post(
+  '/preferences/save',
+  validateData(projectPreferencesSaveSchema),
+  async (req: Request, res: Response) => {
+    const userId = req.userId!;
+    const data: projectPreferencesSaveData = req.body;
+
+    const { status, response } = await projectsManager.savePreferences(data);
+    res.status(status).send({ response });
+  }
+);
+
 export default router;
