@@ -2,15 +2,18 @@ import express, { Router, Request, Response } from 'express';
 import { validateData } from '../../utils/middleware/validation.middleware';
 import { algorithmInputSchema } from './types';
 import { validateAndExtractAuthToken } from '../../utils/middleware/authToken.middleware';
+import projectService from '../../utils/services/projects.manager';
 
 const router: Router = express.Router();
 
-router.post(
-  '/',
-  validateData(algorithmInputSchema),
+router.put(
+  '/:projectId',
+  validateData(algorithmInputSchema, 'params'),
   validateAndExtractAuthToken(),
   async (req: Request, res: Response) => {
-    res.status(500).send({ response: 'Not implemented' });
+    const { projectId } = req.params;
+    const { status, response } = await projectService.runAlgorithm(projectId);
+    res.status(status).send({ response });
   }
 );
 

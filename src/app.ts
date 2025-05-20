@@ -9,7 +9,7 @@ import userRouter from './routes/user';
 import projectsRouter from './routes/projects';
 import cookieParser from 'cookie-parser';
 const app = express();
-const port = 3001;
+const port = process.env.PORT || 3001;
 
 const allowedOrigins = [
   'http://localhost:3000',

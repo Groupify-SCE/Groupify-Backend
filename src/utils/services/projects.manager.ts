@@ -7,6 +7,8 @@ import {
 } from '../../routes/projects/types';
 import { projectUpdateCriterionData } from '../../routes/projects/criteria/types';
 import { projectAddParticipantData } from '../../routes/projects/participants/types';
+import Student from '../algorithm/student.object';
+import { geneticAlgorithmWithPreferences } from '../algorithm/geneticAlgorithm';
 
 class ProjectsManager {
   private static instance: ProjectsManager;
@@ -17,6 +19,7 @@ class ProjectsManager {
   private participantCriteriaDatabaseManager = new DatabaseManager(
     'Participants_Criteria'
   );
+  private groupsDatabaseManager = new DatabaseManager('Groups');
 
   private constructor() {}
 
@@ -884,6 +887,120 @@ class ProjectsManager {
         response: 'Failed to save preferences',
       };
     }
+  }
+
+  public async runAlgorithm(projectId: string): Promise<{
+    status: number;
+    response: string | Student[][];
+  }> {
+    try {
+      const project = await this.projectsDatabaseManager.findOne({
+        _id: new ObjectId(projectId),
+      });
+      if (!project) {
+        return { status: StatusCodes.NOT_FOUND, response: 'Project not found' };
+      }
+      const students = await this.loadStudentsForProject(projectId);
+      const numGroups = Math.ceil(students.length / project.group_size);
+      const result = geneticAlgorithmWithPreferences(students, numGroups);
+      if (result.length === 0) {
+        return {
+          status: StatusCodes.INTERNAL_SERVER_ERROR,
+          response: 'Failed to run algorithm',
+        };
+      }
+      const updateResult = await this.groupsDatabaseManager.update(
+        { _id: new ObjectId(projectId) },
+        { $set: { groups: result } },
+        { upsert: true }
+      );
+      if (updateResult.acknowledged) {
+        return { status: StatusCodes.OK, response: result };
+      }
+    } catch (err) {
+      console.error('Failed to run algorithm:', err);
+    }
+    return {
+      status: StatusCodes.INTERNAL_SERVER_ERROR,
+      response: 'Failed to run algorithm',
+    };
+  }
+
+  public async loadStudentsForProject(projectId: string) {
+    const docs = await this.participantsDatabaseManager.aggregate([
+      {
+        $match: { projectId: new ObjectId(projectId) },
+      },
+      {
+        $lookup: {
+          from: 'Participants_Criteria',
+          localField: '_id',
+          foreignField: 'participant',
+          as: 'criteriaDocs',
+        },
+      },
+      {
+        $lookup: {
+          from: 'Criteria',
+          localField: 'criteriaDocs.criterion',
+          foreignField: '_id',
+          as: 'criterionDefs',
+        },
+      },
+      {
+        $addFields: {
+          criteria: {
+            $map: {
+              input: '$criteriaDocs',
+              as: 'cd',
+              in: {
+                type: {
+                  $let: {
+                    vars: {
+                      def: {
+                        $arrayElemAt: [
+                          {
+                            $filter: {
+                              input: '$criterionDefs',
+                              as: 'd',
+                              cond: { $eq: ['$$d._id', '$$cd.criterion'] },
+                            },
+                          },
+                          0,
+                        ],
+                      },
+                    },
+                    in: {
+                      $concat: ['0-', { $toString: '$$def.range' }],
+                    },
+                  },
+                },
+                value: '$$cd.value',
+              },
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          criteriaDocs: 0,
+          criterionDefs: 0,
+          tz: 0,
+          projectId: 0,
+        },
+      },
+    ]);
+
+    const students = docs.map((doc) => {
+      return new Student({
+        id: (doc._id as ObjectId).toString(),
+        name: `${doc.firstName} ${doc.lastName}`,
+        criteria: doc.criteria,
+        preferences: doc.preferences?.map((p: ObjectId) => p.toString()) || [],
+      });
+    });
+
+    return students;
   }
 }
 
