@@ -1,7 +1,10 @@
 import { StatusCodes } from 'http-status-codes';
 import { DatabaseManager } from './database.manager';
 import { Document, ObjectId, WithId } from 'mongodb';
-import { projectUpdateData } from '../../routes/projects/types';
+import {
+  projectPreferencesSaveData,
+  projectUpdateData,
+} from '../../routes/projects/types';
 import { projectUpdateCriterionData } from '../../routes/projects/criteria/types';
 import { projectAddParticipantData } from '../../routes/projects/participants/types';
 
@@ -543,6 +546,13 @@ class ProjectsManager {
       const participants = await this.participantsDatabaseManager.find({
         projectId: project._id,
       });
+      participants.forEach((participant) => {
+        if (participant.preferences && participant.preferences.length > 0) {
+          participant.preferences = true;
+        } else {
+          participant.preferences = false;
+        }
+      });
       return {
         status: StatusCodes.OK,
         response: participants,
@@ -787,6 +797,103 @@ class ProjectsManager {
       return {
         status: StatusCodes.INTERNAL_SERVER_ERROR,
         response: 'Failed to update participants',
+      };
+    }
+  }
+
+  public async searchProject(code: string): Promise<{
+    status: number;
+    response:
+      | {
+          participants: {
+            _id: string;
+            firstName: string;
+            lastName: string;
+          }[];
+          maxPreferences: number;
+        }
+      | string;
+  }> {
+    try {
+      const project = await this.projectsDatabaseManager.findOne({
+        code: code,
+      });
+      if (!project) {
+        return { status: StatusCodes.NOT_FOUND, response: 'Project not found' };
+      }
+
+      const participants = await this.participantsDatabaseManager.find({
+        projectId: project._id,
+      });
+
+      const participantsArray = participants.map((participant) => ({
+        _id: participant._id.toString(),
+        firstName: participant.firstName,
+        lastName: participant.lastName,
+      }));
+
+      return {
+        status: StatusCodes.OK,
+        response: {
+          participants: participantsArray,
+          maxPreferences: project.preferences,
+        },
+      };
+    } catch (err) {
+      console.error('Failed to search project:', err);
+      return {
+        status: StatusCodes.INTERNAL_SERVER_ERROR,
+        response: 'Failed to search project',
+      };
+    }
+  }
+
+  public async savePreferences(
+    data: projectPreferencesSaveData
+  ): Promise<{ status: number; response: string }> {
+    try {
+      const participant = await this.participantsDatabaseManager.findOne({
+        _id: new ObjectId(data.selectedParticipant),
+        tz: data.participantId,
+      });
+      if (!participant) {
+        return {
+          status: StatusCodes.NOT_FOUND,
+          response: 'Participant not found or not authorized',
+        };
+      }
+
+      const project = await this.projectsDatabaseManager.findOne({
+        _id: participant.projectId,
+      });
+      if (!project) {
+        return {
+          status: StatusCodes.FORBIDDEN,
+          response: 'Unauthorized project access',
+        };
+      }
+
+      const preferences = await this.participantsDatabaseManager.update(
+        { _id: participant._id },
+        { $set: { preferences: data.preferences.map((p) => new ObjectId(p)) } }
+      );
+
+      if (!preferences.acknowledged) {
+        return {
+          status: StatusCodes.INTERNAL_SERVER_ERROR,
+          response: 'Failed to save preferences',
+        };
+      }
+
+      return {
+        status: StatusCodes.OK,
+        response: 'Preferences saved successfully',
+      };
+    } catch (err) {
+      console.error('Failed to save preferences:', err);
+      return {
+        status: StatusCodes.INTERNAL_SERVER_ERROR,
+        response: 'Failed to save preferences',
       };
     }
   }

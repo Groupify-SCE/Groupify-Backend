@@ -30,3 +30,19 @@ export const projectUpdateSchema = z.object({
 });
 
 export type projectUpdateData = z.infer<typeof projectUpdateSchema>;
+
+export const projectSearchSchema = z.object({
+  code: z.string().length(8),
+});
+
+export type projectSearchData = z.infer<typeof projectSearchSchema>;
+
+export const projectPreferencesSaveSchema = z.object({
+  selectedParticipant: z.string().min(1),
+  participantId: z.string().min(1),
+  preferences: z.array(z.string().min(1)),
+});
+
+export type projectPreferencesSaveData = z.infer<
+  typeof projectPreferencesSaveSchema
+>;
