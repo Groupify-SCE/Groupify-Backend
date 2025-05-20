@@ -70,32 +70,33 @@ router.put(
     const participantId = req.params.participantId;
     const data: projectUpdateParticipantCriteriaData = req.body;
 
-    const { status, response } = await projectsManager.updateParticipantCriteria(
-      userId ?? '',
-      participantId,
-      data.criteria
-    );
+    const { status, response } =
+      await projectsManager.updateParticipantCriteria(
+        userId ?? '',
+        participantId,
+        data.criteria
+      );
 
     res.status(status).send({ response });
   }
 );
 
-  router.delete(
-    '/delete/:projectId/:participantId',
-    validateAndExtractAuthToken(),
-    validateData(projectGetParticipantIdSchema, 'params'),
-    async (req: Request, res: Response) => {
-      const userId = req.userId;
-      const { projectId, participantId } = req.params;
-  
-      const { status, response } = await projectsManager.deleteParticipant(
-        userId ?? '',
-        projectId,
-        participantId
-      );
-  
-      res.status(status).send({ response });
-    }
+router.delete(
+  '/delete/:projectId/:participantId',
+  validateAndExtractAuthToken(),
+  validateData(projectGetParticipantIdSchema, 'params'),
+  async (req: Request, res: Response) => {
+    const userId = req.userId;
+    const { projectId, participantId } = req.params;
+
+    const { status, response } = await projectsManager.deleteParticipant(
+      userId ?? '',
+      projectId,
+      participantId
+    );
+
+    res.status(status).send({ response });
+  }
 );
 
 router.put(

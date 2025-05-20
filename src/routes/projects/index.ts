@@ -108,7 +108,6 @@ router.post(
   '/preferences/save',
   validateData(projectPreferencesSaveSchema),
   async (req: Request, res: Response) => {
-    const userId = req.userId!;
     const data: projectPreferencesSaveData = req.body;
 
     const { status, response } = await projectsManager.savePreferences(data);
