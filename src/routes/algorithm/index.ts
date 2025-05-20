@@ -12,7 +12,11 @@ router.put(
   validateAndExtractAuthToken(),
   async (req: Request, res: Response) => {
     const { projectId } = req.params;
-    const { status, response } = await projectService.runAlgorithm(projectId);
+    const userId = req.userId!;
+    const { status, response } = await projectService.runAlgorithm(
+      userId,
+      projectId
+    );
     res.status(status).send({ response });
   }
 );

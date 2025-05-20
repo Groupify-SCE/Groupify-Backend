@@ -895,7 +895,10 @@ class ProjectsManager {
     }
   }
 
-  public async runAlgorithm(projectId: string): Promise<{
+  public async runAlgorithm(
+    userId: string,
+    projectId: string
+  ): Promise<{
     status: number;
     response: string | Student[][];
   }> {
@@ -905,6 +908,12 @@ class ProjectsManager {
       });
       if (!project) {
         return { status: StatusCodes.NOT_FOUND, response: 'Project not found' };
+      }
+      if (project.user.toString() !== userId) {
+        return {
+          status: StatusCodes.FORBIDDEN,
+          response: 'Unauthorized project access',
+        };
       }
       const students = await this.loadStudentsForProject(projectId);
       const numGroups = Math.ceil(students.length / project.group_size);
