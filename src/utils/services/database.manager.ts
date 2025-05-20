@@ -89,7 +89,7 @@ export class DatabaseManager {
     });
   }
 
-  public async aggregate(pipeline: any[]) {
+  public async aggregate(pipeline: Record<string, unknown>[]) {
     return await this.collection.aggregate(pipeline).toArray();
   }
 

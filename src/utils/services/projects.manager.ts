@@ -927,7 +927,7 @@ class ProjectsManager {
         };
       }
 
-      let groups = [];
+      const groups = [];
       for (const group of result) {
         groups.push(
           group.map((student) => {
