@@ -41,18 +41,6 @@ class ProjectsManager {
         user: new ObjectId(userId),
       });
 
-      function makeCode() {
-        var result = '';
-        var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        var charactersLength = characters.length;
-        for (var i = 0; i < 8; i++) {
-          result += characters.charAt(
-            Math.floor(Math.random() * charactersLength)
-          );
-        }
-        return result;
-      }
-
       let code = makeCode();
       while (await this.projectsDatabaseManager.findOne({ code })) {
         code = makeCode();
@@ -446,8 +434,7 @@ class ProjectsManager {
   public async addParticipant(
     userId: string,
     data: projectAddParticipantData
-  ): Promise<{ status: number; response: any }> {
-    // 👈 שינוי: any במקום string
+  ): Promise<{ status: number; response: string | WithId<Document> }> {
     try {
       const user = await this.userDatabaseManager.findOne({
         _id: new ObjectId(userId),
@@ -504,11 +491,12 @@ class ProjectsManager {
             value: 0,
           });
         }
-
-        return {
-          status: StatusCodes.OK,
-          response: createdParticipant, // 👈 שולחים לפרונט את כל האובייקט
-        };
+        if (createdParticipant) {
+          return {
+            status: StatusCodes.OK,
+            response: createdParticipant, // 👈 שולחים לפרונט את כל האובייקט
+          };
+        }
       }
     } catch (err) {
       console.error('Failed to add participant:', err);
@@ -897,6 +885,16 @@ class ProjectsManager {
       };
     }
   }
+}
+
+function makeCode() {
+  let result = '';
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const charactersLength = characters.length;
+  for (let i = 0; i < 8; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
 }
 
 const projectsManager = ProjectsManager.getInstance();
