@@ -48,12 +48,9 @@ export class DatabaseManager {
 
   public async update(
     filter: Record<string, unknown>,
-    update: Record<string, unknown>,
-    options: { upsert?: boolean } = {}
+    update: Record<string, unknown>
   ): Promise<UpdateResult<Document>> {
-    return await this.collection.updateMany(filter, update, {
-      upsert: options.upsert,
-    });
+    return await this.collection.updateMany(filter, update);
   }
 
   public async delete(filter: Record<string, unknown>): Promise<DeleteResult> {
@@ -87,10 +84,6 @@ export class DatabaseManager {
     return await this.collection.updateMany(search, {
       $set: { [field]: value },
     });
-  }
-
-  public async aggregate(pipeline: Record<string, unknown>[]) {
-    return await this.collection.aggregate(pipeline).toArray();
   }
 
   public static async close(): Promise<void> {
