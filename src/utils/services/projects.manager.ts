@@ -162,7 +162,13 @@ class ProjectsManager {
           response: 'The user dosnt own the project',
         };
       }
-      return { status: StatusCodes.OK, response: project };
+      const groups = await this.groupsDatabaseManager.findOne({
+        _id: new ObjectId(projectId),
+      });
+      return {
+        status: StatusCodes.OK,
+        response: { ...project, groups: groups !== undefined },
+      };
     } catch (err) {
       console.error('Failed to get project:', err);
     }
