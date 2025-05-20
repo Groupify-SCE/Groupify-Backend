@@ -900,7 +900,9 @@ class ProjectsManager {
     projectId: string
   ): Promise<{
     status: number;
-    response: string | Student[][];
+    response:
+      | string
+      | { id: string; name: string; tz: string; preferences: string[] }[][];
   }> {
     try {
       const project = await this.projectsDatabaseManager.findOne({
@@ -924,13 +926,28 @@ class ProjectsManager {
           response: 'Failed to run algorithm',
         };
       }
+
+      let groups = [];
+      for (const group of result) {
+        groups.push(
+          group.map((student) => {
+            return {
+              id: student.id,
+              name: student.name,
+              tz: student.tz,
+              preferences: student.preferences,
+            };
+          })
+        );
+      }
+
       const updateResult = await this.groupsDatabaseManager.update(
         { _id: new ObjectId(projectId) },
-        { $set: { groups: result } },
+        { $set: { groups: groups } },
         { upsert: true }
       );
       if (updateResult.acknowledged) {
-        return { status: StatusCodes.OK, response: result };
+        return { status: StatusCodes.OK, response: groups };
       }
     } catch (err) {
       console.error('Failed to run algorithm:', err);
@@ -1000,7 +1017,6 @@ class ProjectsManager {
         $project: {
           criteriaDocs: 0,
           criterionDefs: 0,
-          tz: 0,
           projectId: 0,
         },
       },
@@ -1012,6 +1028,7 @@ class ProjectsManager {
         name: `${doc.firstName} ${doc.lastName}`,
         criteria: doc.criteria,
         preferences: doc.preferences?.map((p: ObjectId) => p.toString()) || [],
+        tz: doc.tz,
       });
     });
 

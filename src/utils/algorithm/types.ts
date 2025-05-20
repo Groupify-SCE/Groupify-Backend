@@ -8,4 +8,5 @@ export type StudentData = {
   name: string;
   preferences: string[];
   criteria: Criteria[];
+  tz: string;
 };
