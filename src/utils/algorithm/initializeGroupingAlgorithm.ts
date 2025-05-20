@@ -1,41 +1,120 @@
 import Student from './student.object';
-
-type Color = 'White' | 'Gray' | 'Black' | 'Red';
+import Denque from 'denque';
 
 class Node {
-  public data: string;
-  public student: Student;
-  public neighbors: Node[] = [];
-  public d: number | null = null;
-  public f: number | null = null;
-  public pie: Node | null = null;
-  public color: Color = 'White';
+  data: number;
+  student: Student;
+  neighbors: Node[];
+  d: number | null;
+  f: number | null;
+  pie: Node | null;
+  color: 'White' | 'Gray' | 'Black' | 'Red';
 
-  constructor(data: string, student: Student) {
+  constructor(data: number, student: Student) {
     this.data = data;
     this.student = student;
+    this.neighbors = [];
+    this.d = null;
+    this.f = null;
+    this.pie = null;
+    this.color = 'White';
+  }
+
+  greaterThan(other: Node): boolean {
+    return this.data > other.data;
+  }
+
+  lessThan(other: Node): boolean {
+    return this.data < other.data;
+  }
+
+  equals(other: Node): boolean {
+    return this.data === other.data;
   }
 }
 
-// Fisher–Yates shuffle
-function shuffle<T>(arr: T[]): void {
-  for (let i = arr.length - 1; i > 0; i--) {
+export function initializeGroups(
+  students: Student[],
+  numberOfGroups: number
+): Student[][] {
+  shuffle(students);
+  const nodeGroups = dfsGrouping(students, numberOfGroups);
+  const studentGroups = nodeGroups.map((group) =>
+    group.map((node) => node.student)
+  );
+  return studentGroups;
+}
+
+function shuffle<T>(array: T[]): void {
+  for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
+    [array[i], array[j]] = [array[j], array[i]];
   }
 }
 
-function DFS(nodes: Record<string, Node>): void {
+function dfsGrouping(students: Student[], numberOfGroups: number): Node[][] {
+  const nodes: Record<number, Node> = students.reduce(
+    (acc: Record<number, Node>, student) => {
+      acc[student.id] = new Node(student.id, student);
+      return acc;
+    },
+    {}
+  );
+
+  for (const student of students) {
+    for (const preference of student.preferences) {
+      if (nodes[preference]) {
+        nodes[student.id].neighbors.push(nodes[preference]);
+      }
+    }
+  }
+
+  DFS(nodes);
+
+  const sortedNodes = Object.values(nodes).sort((a, b) => {
+    const dA = a.d != null ? (a.d as number) : 0;
+    const dB = b.d != null ? (b.d as number) : 0;
+    return dB - dA;
+  });
+
+  const Q = new Denque<Node>(sortedNodes);
+  const groups: Node[][] = [];
+  const n = Object.values(nodes).length;
+  const targetSize = Math.floor(n / numberOfGroups);
+
+  while (!Q.isEmpty()) {
+    const currentNode = Q.pop();
+    if (currentNode && currentNode.color !== 'Red') {
+      const group = getGroup(currentNode, targetSize, n);
+      if (group.length > 0) {
+        group.forEach((node) => (node.color = 'Red'));
+        groups.push(group);
+      }
+    }
+  }
+
+  const ungroupedNodes = Object.values(nodes).filter(
+    (node) => node.color !== 'Red'
+  );
+  const maxGroupSize = targetSize + (n % numberOfGroups != 0 ? 1 : 0);
+
+  const ungroupedGroups = groupUngroupedNodes(ungroupedNodes, maxGroupSize);
+  groups.concat(ungroupedGroups);
+
+  return groups;
+}
+
+function DFS(nodes: Record<number, Node>): void {
   let time = 0;
 
-  function visit(u: Node): void {
+  function DFSVisit(u: Node): void {
     u.color = 'Gray';
     time++;
     u.d = time;
     for (const v of u.neighbors) {
       if (v.color === 'White') {
         v.pie = u;
-        visit(v);
+        DFSVisit(v);
       }
     }
     time++;
@@ -43,119 +122,61 @@ function DFS(nodes: Record<string, Node>): void {
     u.color = 'Black';
   }
 
-  // init
-  for (const n of Object.values(nodes)) {
-    n.color = 'White';
-    n.pie = null;
+  for (const node of Object.values(nodes)) {
+    if (node.color === 'White') {
+      DFSVisit(node);
+    }
   }
-  // run
-  for (const n of Object.values(nodes)) {
-    if (n.color === 'White') visit(n);
-  }
-}
-
-function isValidGroup(group: Node[]): boolean {
-  const s = new Set(group);
-  return group.every((node) => node.neighbors.some((nbr) => s.has(nbr)));
 }
 
 function getGroup(
   node: Node,
-  groupSize: number,
-  partial: Node[] = [],
-  depth = 0,
-  limit = 100
+  targetSize: number,
+  limit: number,
+  depth: number = 0,
+  partial: Node[] = []
 ): Node[] {
   if (depth > limit) return [];
 
-  const current = [...partial, node];
-  if (current.length === groupSize) {
-    return isValidGroup(current) ? current : [];
+  const currentGroup = partial.concat(node);
+
+  if (currentGroup.length === targetSize) {
+    if (isValidGroup(currentGroup)) {
+      return currentGroup;
+    } else {
+      return [];
+    }
   }
-  for (const nbr of node.neighbors) {
-    if (nbr.color !== 'Red' && !current.includes(nbr)) {
-      const attempt = getGroup(nbr, groupSize, current, depth + 1, limit);
-      if (attempt.length) return attempt;
+
+  for (const neighbor of node.neighbors) {
+    if (neighbor.color !== 'Red' && !currentGroup.includes(neighbor)) {
+      const result = getGroup(
+        neighbor,
+        targetSize,
+        limit,
+        depth + 1,
+        currentGroup
+      );
+      if (result.length > 0) return result;
     }
   }
   return [];
 }
 
+function isValidGroup(group: Node[]): boolean {
+  const groupSet = new Set(group);
+  return group.every((node) =>
+    node.neighbors.some((neighbor) => groupSet.has(neighbor))
+  );
+}
+
 function groupUngroupedNodes(ungrouped: Node[], groupSize: number): Node[][] {
-  const result: Node[][] = [];
-  let rest = [...ungrouped];
-  while (rest.length) {
-    const grp = rest.slice(0, groupSize);
-    grp.forEach((n) => (n.color = 'Red'));
-    result.push(grp);
-    rest = rest.slice(groupSize);
-  }
-  return result;
-}
-
-function dfsGrouping(students: Student[], numGroups: number): Node[][] {
-  // 1) build nodes map
-  const nodes: Record<string, Node> = {};
-  for (const s of students) {
-    nodes[s.id] = new Node(s.id, s);
-  }
-  // 2) link neighbors by preferences
-  for (const s of students) {
-    for (const prefId of s.preferences) {
-      const nbr = nodes[prefId];
-      if (nbr) nodes[s.id].neighbors.push(nbr);
-    }
-  }
-  // 3) DFS timestamps
-  DFS(nodes);
-
-  // 4) queue ordered by descending discovery time
-  const all = Object.values(nodes).sort((a, b) => (b.d ?? 0) - (a.d ?? 0));
-  // 5) form groups
   const groups: Node[][] = [];
-  const Q = all.slice(); // simple array as queue
-  const n = students.length;
-  const baseSize = Math.floor(n / numGroups);
-
-  while (Q.length) {
-    const u = Q.shift()!;
-    if (u.color !== 'Red') {
-      const grp = getGroup(u, baseSize, [], 0, n);
-      if (grp.length) {
-        grp.forEach((x) => (x.color = 'Red'));
-        groups.push(grp);
-      }
-    }
+  while (ungrouped.length > 0) {
+    const group = ungrouped.slice(0, groupSize);
+    group.forEach((node) => (node.color = 'Red'));
+    groups.push(group);
+    ungrouped = ungrouped.slice(groupSize);
   }
-
-  // 6) fallback for leftovers
-  const leftovers = Object.values(nodes).filter((x) => x.color !== 'Red');
-  const maxGroupSize = baseSize + (n % numGroups ? 1 : 0);
-  groups.push(...groupUngroupedNodes(leftovers, maxGroupSize));
-
   return groups;
-}
-
-/**
- * Shuffle students & apply preference‐based DFS grouping
- */
-function initializeGroups(students: Student[], numGroups: number): Student[][] {
-  shuffle(students);
-  const nodeGroups = dfsGrouping(students, numGroups);
-  return nodeGroups.map((grp) => grp.map((n) => n.student));
-}
-
-/**
- * Generate an initial population: an array of 'solutions',
- * each solution itself is a Student[][]
- */
-export function generateInitialPopulation(
-  students: Student[],
-  numGroups: number
-): Student[][][] {
-  const pop: Student[][][] = [];
-  for (let i = 0; i < numGroups; i++) {
-    pop.push(initializeGroups(students, numGroups));
-  }
-  return pop;
 }
