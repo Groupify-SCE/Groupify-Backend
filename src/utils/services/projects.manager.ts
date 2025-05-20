@@ -37,6 +37,23 @@ class ProjectsManager {
       const projects = await this.projectsDatabaseManager.find({
         user: new ObjectId(userId),
       });
+
+      function makeCode() {
+        var result = '';
+        var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        var charactersLength = characters.length;
+        for (var i = 0; i < 8; i++) {
+          result += characters.charAt(
+            Math.floor(Math.random() * charactersLength)
+          );
+        }
+        return result;
+      }
+
+      let code = makeCode();
+      while (await this.projectsDatabaseManager.findOne({ code })) {
+        code = makeCode();
+      }
       const result = await this.projectsDatabaseManager.create({
         user: new ObjectId(userId),
         name: `New Project ${projects.length + 1}`,
@@ -44,6 +61,7 @@ class ProjectsManager {
         registrants: 0,
         group_size: 2,
         preferences: 0,
+        code: code,
       });
       if (result.acknowledged) {
         return { status: StatusCodes.OK, response: 'Created project' };
@@ -425,7 +443,8 @@ class ProjectsManager {
   public async addParticipant(
     userId: string,
     data: projectAddParticipantData
-  ): Promise<{ status: number; response: any }> { // 👈 שינוי: any במקום string
+  ): Promise<{ status: number; response: any }> {
+    // 👈 שינוי: any במקום string
     try {
       const user = await this.userDatabaseManager.findOne({
         _id: new ObjectId(userId),
@@ -433,21 +452,21 @@ class ProjectsManager {
       if (!user) {
         return { status: StatusCodes.NOT_FOUND, response: 'User not found' };
       }
-  
+
       const project = await this.projectsDatabaseManager.findOne({
         _id: new ObjectId(data.projectId),
       });
       if (!project) {
         return { status: StatusCodes.NOT_FOUND, response: 'Project not found' };
       }
-  
+
       if (project.user.toString() !== user._id.toString()) {
         return {
           status: StatusCodes.FORBIDDEN,
           response: 'The user dosnt own the project',
         };
       }
-  
+
       const existing = await this.participantsDatabaseManager.find({
         tz: data.tz,
       });
@@ -457,23 +476,24 @@ class ProjectsManager {
           response: 'Participant already exists',
         };
       }
-  
+
       const result = await this.participantsDatabaseManager.create({
         projectId: new ObjectId(data.projectId),
         firstName: data.firstName,
         lastName: data.lastName,
         tz: data.tz,
       });
-  
+
       if (result.acknowledged) {
-        const createdParticipant = await this.participantsDatabaseManager.findOne({
-          _id: result.insertedId,
-        }); // 👈 שליפה מהדאטהבייס
-  
+        const createdParticipant =
+          await this.participantsDatabaseManager.findOne({
+            _id: result.insertedId,
+          }); // 👈 שליפה מהדאטהבייס
+
         const criteria = await this.criteriaDatabaseManager.find({
           project: project._id,
         });
-  
+
         for (const criterion of criteria) {
           await this.participantCriteriaDatabaseManager.create({
             participant: result.insertedId,
@@ -481,7 +501,7 @@ class ProjectsManager {
             value: 0,
           });
         }
-  
+
         return {
           status: StatusCodes.OK,
           response: createdParticipant, // 👈 שולחים לפרונט את כל האובייקט
@@ -490,13 +510,12 @@ class ProjectsManager {
     } catch (err) {
       console.error('Failed to add participant:', err);
     }
-  
+
     return {
       status: StatusCodes.INTERNAL_SERVER_ERROR,
       response: 'Failed to add participant',
     };
   }
-  
 
   public async getAllParticipants(
     userId: string,
@@ -597,37 +616,40 @@ class ProjectsManager {
       if (!user) {
         return { status: StatusCodes.NOT_FOUND, response: 'User not found' };
       }
-  
+
       const project = await this.projectsDatabaseManager.findOne({
         _id: new ObjectId(projectId),
       });
       if (!project) {
         return { status: StatusCodes.NOT_FOUND, response: 'Project not found' };
       }
-  
+
       if (project.user.toString() !== user._id.toString()) {
         return {
           status: StatusCodes.FORBIDDEN,
           response: 'The user does not own the project',
         };
       }
-  
+
       const participant = await this.participantsDatabaseManager.findOne({
         _id: new ObjectId(participantId),
       });
       if (!participant) {
-        return { status: StatusCodes.NOT_FOUND, response: 'Participant not found' };
+        return {
+          status: StatusCodes.NOT_FOUND,
+          response: 'Participant not found',
+        };
       }
-  
+
       const result = await this.participantsDatabaseManager.delete({
         _id: participant._id,
       });
-  
+
       if (result.acknowledged) {
         await this.participantCriteriaDatabaseManager.delete({
           participant: participant._id,
         });
-  
+
         return {
           status: StatusCodes.OK,
           response: 'Participant deleted successfully',
@@ -636,12 +658,12 @@ class ProjectsManager {
     } catch (err) {
       console.error('Failed to delete participant:', err);
     }
-  
+
     return {
       status: StatusCodes.INTERNAL_SERVER_ERROR,
       response: 'Failed to delete participant',
     };
-  }  
+  }
 
   public async updateParticipantCriteria(
     userId: string,
@@ -655,14 +677,17 @@ class ProjectsManager {
       if (!user) {
         return { status: StatusCodes.NOT_FOUND, response: 'User not found' };
       }
-  
+
       const participant = await this.participantsDatabaseManager.findOne({
         _id: new ObjectId(participantId),
       });
       if (!participant) {
-        return { status: StatusCodes.NOT_FOUND, response: 'Participant not found' };
+        return {
+          status: StatusCodes.NOT_FOUND,
+          response: 'Participant not found',
+        };
       }
-  
+
       const project = await this.projectsDatabaseManager.findOne({
         _id: participant.projectId,
       });
@@ -675,27 +700,34 @@ class ProjectsManager {
           response: 'The user does not own the project',
         };
       }
-  
+
       // נעדכן כל קריטריון שנשלח לפי participant + criterionId
       for (const [criterionId, value] of Object.entries(criteria)) {
         const participantObjectId = new ObjectId(participantId);
         const criterionObjectId = new ObjectId(criterionId);
-      
+
         const filter = {
           participant: participantObjectId,
           criterion: criterionObjectId,
         };
         const update = { $set: { value } };
-      
-        console.log('🔄 Updating:', { filter, update });
-      
-        const result = await this.participantCriteriaDatabaseManager.update(filter, update);
-      
-        console.log('✅ Update result:', result);
+
+        const result = await this.participantCriteriaDatabaseManager.update(
+          filter,
+          update
+        );
+        if (!result.acknowledged) {
+          return {
+            status: StatusCodes.INTERNAL_SERVER_ERROR,
+            response: 'Failed to update participant criteria',
+          };
+        }
       }
-      
-  
-      return { status: StatusCodes.OK, response: 'Criteria updated successfully' };
+
+      return {
+        status: StatusCodes.OK,
+        response: 'Criteria updated successfully',
+      };
     } catch (error) {
       console.error('Failed to update participant criteria:', error);
       return {
@@ -704,7 +736,7 @@ class ProjectsManager {
       };
     }
   }
-  
+
   public async updateAllParticipants(
     userId: string,
     projectId: string,
@@ -716,16 +748,23 @@ class ProjectsManager {
     }[]
   ): Promise<{ status: number; response: string }> {
     try {
-      const user = await this.userDatabaseManager.findOne({ _id: new ObjectId(userId) });
+      const user = await this.userDatabaseManager.findOne({
+        _id: new ObjectId(userId),
+      });
       if (!user) {
         return { status: StatusCodes.NOT_FOUND, response: 'User not found' };
       }
-  
-      const project = await this.projectsDatabaseManager.findOne({ _id: new ObjectId(projectId) });
+
+      const project = await this.projectsDatabaseManager.findOne({
+        _id: new ObjectId(projectId),
+      });
       if (!project || project.user.toString() !== user._id.toString()) {
-        return { status: StatusCodes.FORBIDDEN, response: 'Unauthorized project access' };
+        return {
+          status: StatusCodes.FORBIDDEN,
+          response: 'Unauthorized project access',
+        };
       }
-  
+
       for (const p of participants) {
         await this.participantsDatabaseManager.update(
           { _id: new ObjectId(p._id) },
@@ -738,7 +777,7 @@ class ProjectsManager {
           }
         );
       }
-  
+
       return {
         status: StatusCodes.OK,
         response: 'Participants updated successfully',
@@ -751,7 +790,6 @@ class ProjectsManager {
       };
     }
   }
-  
 }
 
 const projectsManager = ProjectsManager.getInstance();
