@@ -55,4 +55,3 @@ export const projectUpdateParticipantCriteriaSchema = z.object({
 export type projectUpdateParticipantCriteriaData = z.infer<
   typeof projectUpdateParticipantCriteriaSchema
 >;
-
