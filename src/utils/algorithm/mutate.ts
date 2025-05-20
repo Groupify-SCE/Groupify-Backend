@@ -17,7 +17,7 @@ export function mutate(groups: Student[][], mutationRate: number): Student[][] {
     }
 
     // Pick two distinct group indices
-    let g1 = Math.floor(Math.random() * numGroups);
+    const g1 = Math.floor(Math.random() * numGroups);
     let g2 = Math.floor(Math.random() * numGroups);
     while (g2 === g1) {
       g2 = Math.floor(Math.random() * numGroups);

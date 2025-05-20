@@ -21,4 +21,18 @@ router.put(
   }
 );
 
+router.get(
+  '/:projectId',
+  validateData(algorithmInputSchema, 'params'),
+  validateAndExtractAuthToken(),
+  async (req: Request, res: Response) => {
+    const { projectId } = req.params;
+    const userId = req.userId!;
+    const { status, response } = await projectService.getAlgorithmResults(
+      userId,
+      projectId
+    );
+    res.status(status).send({ response });
+  }
+);
 export default router;

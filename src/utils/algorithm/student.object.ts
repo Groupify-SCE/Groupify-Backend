@@ -5,12 +5,14 @@ class Student {
   public readonly name: string;
   public readonly criteria: Criteria[];
   public readonly preferences: string[];
+  public readonly tz: string;
 
   constructor(student: StudentData) {
     this.id = student.id;
     this.name = student.name;
     this.criteria = student.criteria;
     this.preferences = student.preferences;
+    this.tz = student.tz;
   }
 
   public getScore(): number {
