@@ -95,9 +95,6 @@ jest.mock('../../src/utils/middleware/authToken.middleware', () => ({
       res: Response,
       next: NextFunction
     ) => {
-      const isAuthenticatedRoute = (req.originalUrl || '').includes(
-        '/algorithm/'
-      );
       const isUnauthenticatedTest =
         req.get('x-test-unauthenticated') === 'true';
 
