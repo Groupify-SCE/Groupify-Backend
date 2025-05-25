@@ -1,16 +1,18 @@
 import { Criteria, StudentData } from './types';
 
 class Student {
-  public readonly id: number;
+  public readonly id: string;
   public readonly name: string;
   public readonly criteria: Criteria[];
-  public readonly preferences: number[];
+  public readonly preferences: string[];
+  public readonly tz: string;
 
   constructor(student: StudentData) {
     this.id = student.id;
     this.name = student.name;
     this.criteria = student.criteria;
     this.preferences = student.preferences;
+    this.tz = student.tz;
   }
 
   public getScore(): number {
