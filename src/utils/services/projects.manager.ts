@@ -7,6 +7,8 @@ import {
 } from '../../routes/projects/types';
 import { projectUpdateCriterionData } from '../../routes/projects/criteria/types';
 import { projectAddParticipantData } from '../../routes/projects/participants/types';
+import Student from '../algorithm/student.object';
+import { geneticAlgorithmWithPreferences } from '../algorithm/geneticAlgorithm';
 
 class ProjectsManager {
   private static instance: ProjectsManager;
@@ -17,6 +19,7 @@ class ProjectsManager {
   private participantCriteriaDatabaseManager = new DatabaseManager(
     'Participants_Criteria'
   );
+  private groupsDatabaseManager = new DatabaseManager('Groups');
 
   private constructor() {}
 
@@ -159,7 +162,13 @@ class ProjectsManager {
           response: 'The user dosnt own the project',
         };
       }
-      return { status: StatusCodes.OK, response: project };
+      const groups = await this.groupsDatabaseManager.findOne({
+        _id: new ObjectId(projectId),
+      });
+      return {
+        status: StatusCodes.OK,
+        response: { ...project, groups: groups !== undefined },
+      };
     } catch (err) {
       console.error('Failed to get project:', err);
     }
@@ -884,6 +893,168 @@ class ProjectsManager {
         response: 'Failed to save preferences',
       };
     }
+  }
+
+  public async runAlgorithm(
+    userId: string,
+    projectId: string
+  ): Promise<{
+    status: number;
+    response:
+      | string
+      | { id: string; name: string; tz: string; preferences: string[] }[][];
+  }> {
+    try {
+      const project = await this.projectsDatabaseManager.findOne({
+        _id: new ObjectId(projectId),
+      });
+      if (!project) {
+        return { status: StatusCodes.NOT_FOUND, response: 'Project not found' };
+      }
+      if (project.user.toString() !== userId) {
+        return {
+          status: StatusCodes.FORBIDDEN,
+          response: 'Unauthorized project access',
+        };
+      }
+      const students = await this.loadStudentsForProject(projectId);
+      const numGroups = Math.ceil(students.length / project.group_size);
+      const result = geneticAlgorithmWithPreferences(students, numGroups);
+      if (result.length === 0) {
+        return {
+          status: StatusCodes.INTERNAL_SERVER_ERROR,
+          response: 'Failed to run algorithm',
+        };
+      }
+
+      const groups = [];
+      for (const group of result) {
+        groups.push(
+          group.map((student) => {
+            return {
+              id: student.id,
+              name: student.name,
+              tz: student.tz,
+              preferences: student.preferences,
+            };
+          })
+        );
+      }
+
+      const updateResult = await this.groupsDatabaseManager.update(
+        { _id: new ObjectId(projectId) },
+        { $set: { groups: groups } },
+        { upsert: true }
+      );
+      if (updateResult.acknowledged) {
+        return { status: StatusCodes.OK, response: groups };
+      }
+    } catch (err) {
+      console.error('Failed to run algorithm:', err);
+    }
+    return {
+      status: StatusCodes.INTERNAL_SERVER_ERROR,
+      response: 'Failed to run algorithm',
+    };
+  }
+
+  public async loadStudentsForProject(projectId: string) {
+    const docs = await this.participantsDatabaseManager.aggregate([
+      {
+        $match: { projectId: new ObjectId(projectId) },
+      },
+      {
+        $lookup: {
+          from: 'Participants_Criteria',
+          localField: '_id',
+          foreignField: 'participant',
+          as: 'criteriaDocs',
+        },
+      },
+      {
+        $lookup: {
+          from: 'Criteria',
+          localField: 'criteriaDocs.criterion',
+          foreignField: '_id',
+          as: 'criterionDefs',
+        },
+      },
+      {
+        $addFields: {
+          criteria: {
+            $map: {
+              input: '$criteriaDocs',
+              as: 'cd',
+              in: {
+                type: {
+                  $let: {
+                    vars: {
+                      def: {
+                        $arrayElemAt: [
+                          {
+                            $filter: {
+                              input: '$criterionDefs',
+                              as: 'd',
+                              cond: { $eq: ['$$d._id', '$$cd.criterion'] },
+                            },
+                          },
+                          0,
+                        ],
+                      },
+                    },
+                    in: {
+                      $concat: ['0-', { $toString: '$$def.range' }],
+                    },
+                  },
+                },
+                value: '$$cd.value',
+              },
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          criteriaDocs: 0,
+          criterionDefs: 0,
+          projectId: 0,
+        },
+      },
+    ]);
+
+    const students = docs.map((doc) => {
+      return new Student({
+        id: (doc._id as ObjectId).toString(),
+        name: `${doc.firstName} ${doc.lastName}`,
+        criteria: doc.criteria,
+        preferences: doc.preferences?.map((p: ObjectId) => p.toString()) || [],
+        tz: doc.tz,
+      });
+    });
+
+    return students;
+  }
+
+  public async getAlgorithmResults(userId: string, projectId: string) {
+    const project = await this.projectsDatabaseManager.findOne({
+      _id: new ObjectId(projectId),
+    });
+    if (!project) {
+      return { status: StatusCodes.NOT_FOUND, response: 'Project not found' };
+    }
+    if (project.user.toString() !== userId) {
+      return {
+        status: StatusCodes.FORBIDDEN,
+        response: 'Unauthorized project access',
+      };
+    }
+    const groups = await this.groupsDatabaseManager.findOne({
+      _id: new ObjectId(projectId),
+    });
+    if (!groups) {
+      return { status: StatusCodes.NOT_FOUND, response: 'Groups not found' };
+    }
+    return { status: StatusCodes.OK, response: groups.groups };
   }
 }
 
