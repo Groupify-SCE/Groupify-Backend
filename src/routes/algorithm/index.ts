@@ -35,4 +35,5 @@ router.get(
     res.status(status).send({ response });
   }
 );
+
 export default router;
