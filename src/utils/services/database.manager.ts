@@ -98,4 +98,8 @@ export class DatabaseManager {
       await this.client.close();
     }
   }
+
+  public static getDb(): Db {
+    return DatabaseManager.db;
+  }
 }
