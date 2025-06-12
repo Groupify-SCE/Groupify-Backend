@@ -49,7 +49,7 @@ export type projectGetParticipantIdData = z.infer<
 >;
 
 export const projectUpdateParticipantCriteriaSchema = z.object({
-  criteria: z.record(z.string(), z.number().min(0).max(1000)),
+  criteria: z.record(z.string(), z.coerce.number().min(0).max(1000)),
 });
 
 export type projectUpdateParticipantCriteriaData = z.infer<
