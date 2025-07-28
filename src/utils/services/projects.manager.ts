@@ -468,6 +468,7 @@ class ProjectsManager {
 
       const existing = await this.participantsDatabaseManager.find({
         tz: data.tz,
+        projectId: new ObjectId(data.projectId),
       });
       if (existing.length !== 0) {
         return {
