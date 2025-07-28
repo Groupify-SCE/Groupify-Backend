@@ -6,9 +6,10 @@ import { StatusCodes } from 'http-status-codes';
 import authRouter from './routes/auth';
 import algorithmRouter from './routes/algorithm';
 import userRouter from './routes/user';
+import projectsRouter from './routes/projects';
 import cookieParser from 'cookie-parser';
 const app = express();
-const port = 3001;
+const port = process.env.PORT || 3001;
 
 const allowedOrigins = [
   'http://localhost:3000',
@@ -42,6 +43,7 @@ app.get('/', (req: Request, res: Response) => {
 app.use('/auth', authRouter);
 app.use('/algorithm', algorithmRouter);
 app.use('/user', userRouter);
+app.use('/projects', projectsRouter);
 
 if (process.env.NODE_ENV !== 'test') {
   app.listen(port, () => {
